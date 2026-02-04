@@ -424,15 +424,9 @@
     pointer-events: none;
   }
   
-  .space-selection-modal-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-  }
-  
   .space-selection-modal-share-btn {
     background: none;
-    border: 1px solid var(--color-gray-5);
+    border: 1px solid var(--color-black);
     color: rgb(var(--color-white));
     padding: 8px 16px;
     border-radius: 6px;
@@ -619,17 +613,6 @@
     box-shadow: 0 4px 12px rgba(var(--color-near-black), 0.1);
   }
   
-  .detail-right-panel {
-    flex: 1;
-    background-color: rgb(var(--color-bg-light-4));
-    border-radius: 12px;
-    padding: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(var(--color-near-black), 0.1);
-  }
-  
   .detail-text-content {
     height: 100%;
   }
@@ -650,25 +633,12 @@
     margin: 0 0 20px 0;
   }
   
-  .detail-text-content h4 {
-    font-family: var(--font-family-medium);
-    font-size: 18px;
-    font-weight: 600;
-    color: rgb(var(--color-gray));
-    margin: 20px 0 15px 0;
-  }
-  
   .detail-text-content p {
     font-family: var(--font-family-medium); 
     font-size: 15px;
     line-height: 1.6;
     color: rgb(var(--color-near-black));
     margin: 0 0 20px 0;
-  }
-  
-  .detail-text-content ul {
-    margin: 0 0 20px 0;
-    padding-left: 20px;
   }
   
   .detail-text-content li {
@@ -680,134 +650,12 @@
   }
   
   /* Space SVG Container */
-  .space-svg-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .space-svg-image {
-    width: 100%;
-    height: auto;
-    max-height: 600px;
-    display: block;
-  }
-  
-  .space-svg-image object {
-    width: 100%;
-    height: auto;
-    max-height: 600px;
-    display: block;
-  }
   
   /* Exploded 3D View (kept for backward compatibility if needed) */
-  .exploded-view-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .exploded-3d-view {
-    width: 100%;
-    height: 400px;
-    background: linear-gradient(145deg, var(--color-bg-gradient-start), var(--color-bg-light-1));
-    border-radius: 12px;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: inset 0 2px 8px rgba(var(--color-near-black), 0.1);
-  }
-  
-  .hvac-elements {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    width: 80%;
-    height: 80%;
-  }
-  
-  .hvac-component {
-    background-color: rgb(var(--color-bg-light-2));
-    border: 2px solid var(--color-gray-4);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-family-medium);
-    font-size: 14px;
-    font-weight: 500;
-    color: rgb(var(--color-gray));
-    cursor: pointer;
-    transition: var(--transition-base);
-    position: relative;
-  }
-  
-  .hvac-component:hover {
-    background-color: rgb(var(--color-bg-light-3));
-    border-color: rgb(var(--color-tag-gray));
-  }
-  
-  .hvac-component.blue-highlight {
-    background-color: rgba(var(--color-sky-blue), 1);
-    color: rgb(var(--color-white));
-    border-color: rgb(var(--color-dark-blue));
-  }
-  
-  .hvac-component.blue-highlight:hover {
-    background-color: rgb(var(--color-dark-blue));
-  }
   
   /* Product Carousel */
   .product-carousel {
     position: relative;
-  }
-  
-  .product-card {
-    display: none;
-    background-color: rgb(var(--color-white));
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(var(--color-near-black), 0.1);
-  }
-  
-  .product-card.active {
-    display: block;
-  }
-  
-  .product-card h3 {
-    font-family: var(--font-family-bold);
-    font-size: 20px;
-    font-weight: 700;
-    color: rgb(var(--color-gray));
-    margin: 0 0 20px 0;
-  }
-  
-  .product-image-container {
-    position: relative;
-    margin: 0 0 20px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .product-image {
-    width: 200px;
-    height: 150px;
-    background: linear-gradient(145deg, var(--color-bg-light-1), var(--color-bg-light-2));
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--font-family-medium);
-    font-size: 14px;
-    color: rgb(var(--color-near-black));
-    border: 2px solid var(--color-border-medium);
   }
   
   .hvac-unit-3d {
@@ -821,41 +669,6 @@
     font-family: var(--font-family-medium);
     font-size: 12px;
     color: rgb(var(--color-gray));
-  }
-  
-  .carousel-prev,
-  .carousel-next {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: rgba(var(--color-sky-blue), 1);
-    color: rgb(var(--color-white));
-    border: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: bold;
-    transition: var(--transition-base);
-    z-index: 10;
-  }
-  
-  .carousel-prev {
-    left: -15px;
-  }
-  
-  .carousel-next {
-    right: -15px;
-  }
-  
-  .carousel-prev:hover,
-  .carousel-next:hover {
-    background-color: rgb(var(--color-dark-blue));
-    transform: translateY(-50%) scale(1.1);
   }
   
   .carousel-dots {
@@ -880,30 +693,6 @@
   
   .dot:hover {
     background-color: rgb(var(--color-dark-blue));
-  }
-  
-  .product-features {
-    margin: 0 0 20px 0;
-    padding: 0;
-    list-style: none;
-  }
-  
-  .product-features li {
-    font-family: var(--font-family-semi-bold);
-    font-size: 14px;
-    line-height: 1.5;
-    color: rgb(var(--color-near-black));
-    margin: 0 0 10px 0;
-    padding: 0 0 0 20px;
-    position: relative;
-  }
-  
-  .product-features li::before {
-    content: '•';
-    color: rgba(var(--color-sky-blue), 1);
-    font-weight: bold;
-    position: absolute;
-    left: 0;
   }
   
   .view-product-details-btn {
@@ -996,39 +785,9 @@
       gap: 20px;
     }
     
-    .detail-left-panel,
-    .detail-right-panel {
+    .detail-left-panel {
       flex: none;
       padding: 0;
-    }
-    
-    .exploded-3d-view {
-      height: 300px;
-    }
-    
-    .hvac-elements {
-      grid-template-columns: 1fr;
-      gap: 15px;
-    }
-    
-    .product-image {
-      width: 150px;
-      height: 120px;
-    }
-    
-    .carousel-prev,
-    .carousel-next {
-      width: 25px;
-      height: 25px;
-      font-size: 14px;
-    }
-    
-    .carousel-prev {
-      left: -12px;
-    }
-    
-    .carousel-next {
-      right: -12px;
     }
   }
 
@@ -1123,11 +882,6 @@
   padding-bottom: 20px;
   margin: 0;
   line-height: 1.5;
-}
-
-.overview-overlay-card ul {
-  padding-left: 20px;
-  margin: 0;
 }
 
 .overview-overlay-card li {
@@ -1289,7 +1043,7 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: rgb(var(--color-gray-4));
+    background-color: rgb(var(--color-tag-gray));
     border: none;
     padding: 0;
     cursor: pointer;
@@ -1341,11 +1095,6 @@
     font-size: 14px;
     line-height: 1.5;
     color: rgb(var(--color-near-black));
-    margin: 0;
-}
-
-.product-info-section ul {
-    padding-left: 20px;
     margin: 0;
 }
 
@@ -1422,24 +1171,6 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-}
-
-.svg-container {
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  border: 2px solid var(--color-bg-light-2);
-  border-radius: 5px;
-  background: rgb(var(--color-bg-light-4));
-  position: relative;
-  overflow: hidden; /* Changed from visible to hidden to contain layers */
-  height: 600px; /* Ensure height is set for absolute positioning */
-}
-
-.svg-container object {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 
 /* Layered Map Styles */
