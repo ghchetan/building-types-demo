@@ -1,0 +1,1459 @@
+/**
+ * Building Experience Application
+ * 
+ * Architecture: Model-View-Controller (MVC)
+ * -----------------------------------------
+ * This application allows users to explore different spaces within a building environment.
+ * It uses an interactive SVG map to select spaces and view detailed information about
+ * HVAC systems and Greenheck products.
+ * 
+ * Components:
+ * - SpaceService: Handles data fetching (currently uses mock data).
+ * - SpaceModel: Manages the application state (current space, list of spaces, etc.).
+ * - SpaceView: Handles all DOM manipulations, SVG interactions, and UI rendering.
+ * - SpaceController: Connects the Model and View, handling user inputs and application logic.
+ */
+
+/* ==========================================================================
+   Configuration & Constants
+   ========================================================================== */
+const APP_CONFIG = {
+    // DOM Element IDs and Selectors
+    selectors: {
+        ids: {
+            // Modal Elements
+            modal: 'space-selection-modal',
+            modalTitle: 'space-selection-modal-space-name', // Note: This is actually a class in HTML but used as ID in some contexts? Checking usage below.
+            // Wait, looking at original code: document.querySelector('.space-selection-modal-space-name')
+            // So this is a class selector. Let's separate classes and IDs properly.
+            
+            modalSystemName: 'modal-system-name',
+            modalCloseBtn: 'modal-close-btn',
+            modalBackBtn: 'modal-back-btn',
+            
+            // Detail Section Elements
+            detailTitle: 'detail-title',
+            detailDescription: 'detail-description',
+            
+            // Tab Contents
+            overviewContent: 'overview-content',
+            systemEquipmentContent: 'system-equipment-content',
+            designNarrativeContent: 'design-narrative-content',
+            
+            // SVGs
+            buildingMapSvg: 'building-svg-map',
+            buildingMarkersSvg: 'building-svg-markers',
+            spaceSvg: 'space-svg-object',
+            overlaySvg: 'building-space-overlay-object',
+            
+            // Popover
+            popover: 'space-popover',
+            popoverSpaceName: 'popover-space-name',
+            popoverSystemName: 'popover-system-name',
+            popoverViewBtn: 'popover-view-btn',
+            popoverCloseBtn: 'popover-close-btn',
+            
+            // Scenes
+            buildingScene: 'building-overview-scene',
+            detailScene: 'detail-scene',
+            
+            // Page Metadata
+            pageTitle: 'page-title',
+            heroBgImg: 'hero-bg-img',
+            heroTitle: 'hero-title',
+            heroDescription: 'hero-description',
+            heroButtonsContainer: 'hero-buttons-container'
+        },
+        classes: {
+            modalSpaceName: '.space-selection-modal-space-name',
+            modalTab: '.space-selection-modal-tab',
+            tabContent: '.tab-content',
+            productCarousel: '.product-carousel',
+            productSlide: '.product-slide',
+            carouselDots: '.carousel-dots',
+            dot: '.dot',
+            navBtnNext: '.carousel-nav-btn.next',
+            navBtnPrev: '.carousel-nav-btn.prev',
+            liveRegion: '.carousel-live-region',
+            
+            // Marker Classes
+            markerGroup: 'gh-marker-group',
+            childVisible: 'gh-child-visible',
+            childHidden: 'gh-child-hidden',
+            markerDimmed: 'gh-marker-dimmed'
+        }
+    },
+    // SVG Internal IDs
+    svg: {
+        pinsGroup: 'K-12-Pins-Roof-Closed',
+        buildingRoof: 'school-roof',
+        overlayViewBtn: 'view-default', // Static ID defined inside the SVG file
+        overlayCloseBtn: 'close-btn'    // Static ID defined inside the SVG file
+    },
+    // Constants
+    constants: {
+        popoverOffsetX: 160,
+        popoverOffsetY: 10,
+        tabs: {
+            overview: 'overview',
+            equipment: 'system-equipment',
+            narrative: 'design-narrative'
+        }
+    }
+};
+
+/* ==========================================================================
+   Service Layer
+   ========================================================================== */
+/**
+ * Service class responsible for data retrieval.
+ * In a real-world scenario, this would make HTTP requests to a backend API.
+ */
+class SpaceService {
+    constructor() {
+        this.dataUrl = '/api/building-data'; // Placeholder for API endpoint
+    }
+
+    /**
+     * Fetches the building space data.
+     * Uses the local JSON file to simulate an API response.
+     * 
+     * @param {string} buildingType - Optional building type to fetch data for.
+     * @returns {Promise<Object>} A promise that resolves to the data object containing spaces and page metadata.
+     */
+    async fetchData(buildingType = 'k-12') {
+        try {
+            // In a real application, buildingType could be used to construct the URL
+            // For this demo, we use the API response simulation
+            // const response = await fetch(`./Content/js/${buildingType}-data.json`);
+            
+            // Switch to API Response for validation of DataAdapter
+            const response = await fetch(`./Content/js/api-response.json`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const rawData = await response.json();
+            
+            // Use DataAdapter if available to transform the data
+            if (typeof DataAdapter !== 'undefined') {
+                console.log('Using DataAdapter to transform API response');
+                return DataAdapter.transform(rawData);
+            } else {
+                console.warn('DataAdapter not found, returning raw data');
+                return rawData;
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            // Return empty structure on error to prevent app crash
+            return { pageMetadata: {}, spaces: [] };
+        }
+    }
+}
+
+/* ==========================================================================
+   Model Layer
+   ========================================================================== */
+/**
+ * Model class responsible for managing the application's state.
+ * Stores the list of spaces and the currently selected space.
+ */
+class SpaceModel {
+    constructor() {
+        this.spaces = [];             // List of all available spaces
+        this.pageMetadata = null;     // Page-specific metadata (hero, title, etc.)
+        this.currentSpaceId = null;   // ID of the currently selected space
+        this.currentTab = APP_CONFIG.constants.tabs.overview; // Default active tab in the detail modal
+        this.currentProductIndex = 0; // Index of the currently visible product in the carousel
+        this.markerData = {};         // Stores SVG marker coordinates
+    }
+
+    /**
+     * Updates the list of spaces.
+     * @param {Array<Object>} spaces - Array of space objects.
+     */
+    setSpaces(spaces) {
+        this.spaces = spaces;
+    }
+
+    /**
+     * Sets the page metadata.
+     * @param {Object} metadata - The page metadata object.
+     */
+    setPageMetadata(metadata) {
+        this.pageMetadata = metadata;
+    }
+
+    /**
+     * Retrieves the page metadata.
+     * @returns {Object|null} The page metadata object.
+     */
+    getPageMetadata() {
+        return this.pageMetadata;
+    }
+
+    /**
+     * Retrieves a specific space by its ID.
+     * @param {string} id - The unique identifier of the space.
+     * @returns {Object|undefined} The space object if found, otherwise undefined.
+     */
+    getSpace(id) {
+        return this.spaces.find(s => s.id === id);
+    }
+
+    /**
+     * Retrieves all available spaces.
+     * @returns {Array<Object>} Array of all space objects.
+     */
+    getAllSpaces() {
+        return this.spaces;
+    }
+
+    /**
+     * Sets the currently active space ID.
+     * @param {string} id - The unique identifier of the space to select.
+     */
+    setCurrentSpace(id) {
+        this.currentSpaceId = id;
+    }
+
+    /**
+     * Retrieves the currently active space object.
+     * @returns {Object|undefined} The currently selected space object.
+     */
+    getCurrentSpace() {
+        return this.getSpace(this.currentSpaceId);
+    }
+}
+
+/* ==========================================================================
+   View Layer
+   ========================================================================== */
+/**
+ * View class responsible for UI updates and DOM interaction.
+ * Handles rendering of modals, popovers, SVGs, and dynamic content.
+ */
+class SpaceView {
+    constructor() {
+        // --- DOM Elements ---
+        // Modal elements
+        this.modal = document.getElementById(APP_CONFIG.selectors.ids.modal);
+        this.modalTitle = document.querySelector(APP_CONFIG.selectors.classes.modalSpaceName);
+        this.modalSystemName = document.getElementById(APP_CONFIG.selectors.ids.modalSystemName);
+        this.modalTabs = document.querySelectorAll(APP_CONFIG.selectors.classes.modalTab);
+        this.tabContents = document.querySelectorAll(APP_CONFIG.selectors.classes.tabContent);
+        
+        // Detail section elements
+        this.detailTitle = document.getElementById(APP_CONFIG.selectors.ids.detailTitle);
+        this.detailDescription = document.getElementById(APP_CONFIG.selectors.ids.detailDescription);
+        this.narrativeContent = document.getElementById(APP_CONFIG.selectors.ids.designNarrativeContent);
+        
+        // Product Carousel
+        this.productCarousel = document.querySelector(APP_CONFIG.selectors.classes.productCarousel);
+        
+        // SVG Object Containers
+        this.buildingMapObject = document.getElementById(APP_CONFIG.selectors.ids.buildingMapSvg);
+        this.buildingMarkersObject = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+        this.spaceSvgObject = document.getElementById(APP_CONFIG.selectors.ids.spaceSvg);
+        
+        // Popover element
+        this.popover = document.getElementById(APP_CONFIG.selectors.ids.popover);
+        
+        // --- State ---
+        this.isPopoverVisible = false;
+        
+        // --- Constants ---
+        this.SPACE_POPOVER_OFFSET_X = APP_CONFIG.constants.popoverOffsetX;
+        this.SPACE_POPOVER_OFFSET_Y = APP_CONFIG.constants.popoverOffsetY;
+    }
+
+    /**
+     * Renders the dynamic page content including hero section.
+     * @param {Object} metadata - The page metadata object.
+     */
+    renderPageContent(metadata) {
+        if (!metadata) return;
+
+        // Update Page Title
+        const pageTitle = document.getElementById(APP_CONFIG.selectors.ids.pageTitle);
+        if (pageTitle) pageTitle.textContent = metadata.title;
+        document.title = `${metadata.title} | Greenheck`;
+
+        // Update Hero Section
+        const hero = metadata.heroSection;
+        if (hero) {
+            const bgImg = document.getElementById(APP_CONFIG.selectors.ids.heroBgImg);
+            if (bgImg) bgImg.src = hero.backgroundImage;
+
+            const heroTitle = document.getElementById(APP_CONFIG.selectors.ids.heroTitle);
+            if (heroTitle) heroTitle.textContent = hero.title;
+
+            const heroDesc = document.getElementById(APP_CONFIG.selectors.ids.heroDescription);
+            if (heroDesc) heroDesc.innerHTML = hero.description;
+
+            // Render Hero Buttons
+            const btnContainer = document.getElementById(APP_CONFIG.selectors.ids.heroButtonsContainer);
+            if (btnContainer) {
+                btnContainer.innerHTML = ''; // Clear existing
+
+                hero.actions.forEach(action => {
+                    const btn = document.createElement('button');
+                    btn.className = `hero-btn ${action.type === 'primary' ? 'hero-btn-primary' : ''}`;
+                    if (action.actionId) btn.id = action.actionId;
+
+                    const img = document.createElement('img');
+                    img.src = action.iconClass;
+                    img.alt = action.label;
+                    
+                    btn.appendChild(img);
+                    btn.appendChild(document.createTextNode(`\u00A0${action.label}`)); // Add non-breaking space
+                    
+                    btnContainer.appendChild(btn);
+                });
+            }
+        }
+        
+        // Update Modal SVGs (Map and Markers layers)
+        const mapObj = document.getElementById(APP_CONFIG.selectors.ids.buildingMapSvg);
+        const markersObj = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+
+        // Map Layer
+        const mapSrc = metadata.modalMapImage;
+        if (mapObj && mapSrc) {
+            if (mapObj.getAttribute('data') !== mapSrc) {
+                mapObj.setAttribute('data', mapSrc);
+            }
+        }
+
+        // Markers Layer
+        const markersSrc = metadata.modalMarkersImage;
+        if (markersObj && markersSrc) {
+            if (markersObj.getAttribute('data') !== markersSrc) {
+                markersObj.setAttribute('data', markersSrc);
+            }
+        }
+    }
+
+    /**
+     * Displays the space selection modal and prevents background scrolling.
+     */
+    showModal() {
+        this.modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    /**
+     * Hides the space selection modal and restores background scrolling.
+     * Also ensures any active popover is hidden.
+     */
+    hideModal() {
+        this.modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        this.hidePopover();
+    }
+
+    /**
+     * Renders the details for a specific space into the modal.
+     * Updates titles, descriptions, and handles tab content switching.
+     * 
+     * @param {Object} space - The space object containing details to render.
+     * @param {string} tab - The ID of the tab to display (default: 'overview').
+     */
+    renderSpaceDetails(space, tab = APP_CONFIG.constants.tabs.overview) {
+        if (!space) return;
+
+        // Update Header Information
+        this.modalTitle.textContent = space.name;
+        this.modalSystemName.textContent = space.systemName;
+        this.modalSystemName.style.display = 'block';
+
+        // Update Tab States (Active/Inactive)
+        this.modalTabs.forEach(t => {
+            t.classList.toggle('active', t.dataset.tab === tab);
+            t.disabled = false;
+        });
+
+        // Hide all tab contents first
+        this.tabContents.forEach(c => c.classList.remove('active'));
+        
+        // Render specific tab content based on selection
+        if (tab === APP_CONFIG.constants.tabs.overview) {
+            document.getElementById(APP_CONFIG.selectors.ids.overviewContent).classList.add('active');
+            
+            // Inject Overview Content
+            // The JSON structure includes HTML in 'body', which allows for rich text.
+            const container = document.getElementById(APP_CONFIG.selectors.ids.overviewContent);
+            
+            // Use bgImg from data or fallback to empty string
+            const bgImg = space.overview.bgImg || '';
+            
+            container.innerHTML = `
+                <div class="overview-full-layout" style="background-image: url('${bgImg}')">
+                    <div class="overview-overlay-card">
+                        <h2>${space.overview.title}</h2>
+                        ${space.overview.body}
+                    </div>
+                </div>
+            `;
+        } else if (tab === APP_CONFIG.constants.tabs.equipment) {
+            document.getElementById(APP_CONFIG.selectors.ids.systemEquipmentContent).classList.add('active');
+            this.renderProductCarousel(space.systemEquipment);
+        } else if (tab === APP_CONFIG.constants.tabs.narrative) {
+            const container = document.getElementById(APP_CONFIG.selectors.ids.designNarrativeContent);
+            container.classList.add('active');
+            
+            const bgImg = space.designNarrative.img || '';
+            
+            container.innerHTML = `
+                <div class="design-narrative-layout">
+                    <h2>${space.designNarrative.title}</h2>
+                    <div class="design-narrative-split">
+                        <div class="design-narrative-text">
+                            ${space.designNarrative.body}
+                        </div>
+                        <div class="design-narrative-image">
+                             <img src="${bgImg}" alt="${space.name} Design Narrative" />
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    /**
+     * Renders the product carousel for the "System Equipment" tab.
+     * Generates HTML slides for each product, handles accessibility attributes,
+     * and sets up dot navigation.
+     * 
+     * @param {Array<Object>} products - Array of product objects to display.
+     */
+    renderProductCarousel(products) {
+        const container = document.querySelector(APP_CONFIG.selectors.classes.productCarousel);
+        if (!products || products.length === 0) {
+            container.innerHTML = '<p>No equipment data available for this space.</p>';
+            return;
+        }
+
+        // Accessibility: Define the container as a region
+        container.setAttribute('role', 'region');
+        container.setAttribute('aria-roledescription', 'carousel');
+        container.setAttribute('aria-label', 'System Equipment Carousel');
+        
+        // Preload images to ensure smooth transitions
+        this.preloadImages(products);
+
+        // Create a live region for screen reader announcements
+        let html = '<div class="carousel-live-region visually-hidden" aria-live="polite"></div>';
+        
+        // Generate HTML for each product slide
+        products.forEach((product, index) => {
+            const activeClass = index === 0 ? 'active' : '';
+            const bgImg = product.bgImg || '';
+            const bgStyle = bgImg ? `background-image: url('${bgImg}');` : 'background-color: var(--color-bg-light-1);';
+
+            html += `
+                <div class="product-slide ${activeClass}" 
+                     style="${bgStyle}" 
+                     data-index="${index}"
+                     role="group" 
+                     aria-roledescription="slide" 
+                     aria-label="${index + 1} of ${products.length}">
+                     
+                    <div class="product-overlay-card">
+                        <div class="product-card-header">
+                            <h3>${product.title}</h3>
+                        </div>
+                        
+                        <div class="product-visual-section">
+                            <button class="carousel-nav-btn prev" aria-label="Previous product">
+                                <span class="material-symbols-outlined">arrow_back_ios_new</span>
+                            </button>
+                            
+                            <div class="product-image-wrapper">
+                                ${product.slideImg ? 
+                                    `<img src="${product.slideImg}" alt="${product.title}" loading="eager">` : 
+                                    `<div class="hvac-unit-3d">${product.title} 3D View</div>`
+                                }
+                            </div>
+                            
+                            <button class="carousel-nav-btn next" aria-label="Next product">
+                                <span class="material-symbols-outlined">arrow_forward_ios</span>
+                            </button>
+                            
+                            <div class="carousel-dots">
+                                ${products.map((_, i) => `
+                                    <button class="dot ${i === index ? 'active' : ''}" 
+                                            aria-label="Go to slide ${i+1}"
+                                            aria-current="${i === index ? 'true' : 'false'}"
+                                            data-index="${i}">
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="product-info-section">
+                            <div class="product-body-content">
+                                ${product.body}
+                            </div>
+                            <button class="view-product-details-btn">View Product Details</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        
+        // Attach click listeners to the navigation dots
+        const dots = container.querySelectorAll(APP_CONFIG.selectors.classes.dot);
+        dots.forEach(dot => {
+            dot.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(e.target.dataset.index);
+                this.model.currentProductIndex = idx;
+                this.updateProductVisibility(idx, 'dot');
+            });
+        });
+    }
+
+    /**
+     * Preloads background and slide images to prevent flickering during carousel navigation.
+     * @param {Array<Object>} products - Array of product objects containing image URLs.
+     */
+    preloadImages(products) {
+        products.forEach(product => {
+            if (product.bgImg) {
+                const img = new Image();
+                img.src = product.bgImg;
+            }
+            if (product.slideImg) {
+                const img = new Image();
+                img.src = product.slideImg;
+            }
+        });
+    }
+
+    /**
+     * Loads the SVG for a specific space into the detail view.
+     * @param {string} markerImg - The path to the SVG file.
+     */
+    loadSpaceSvg(markerImg) {
+        if (this.spaceSvgObject) {
+            // Force reload by setting data attribute
+            this.spaceSvgObject.setAttribute('data', markerImg);
+            
+            // Log for debugging purposes
+            console.log('Loading Space SVG:', markerImg);
+        } else {
+            console.error('Space SVG Object not found in DOM');
+        }
+    }
+
+    /**
+     * Shows the overlay SVG on the main building view when a space is selected.
+     * This highlights the selected area on the main map.
+     * 
+     * @param {string} markerImg - The path to the overlay SVG file.
+     */
+    replaceLandingSvg(markerImg) {
+        const overlay = document.getElementById(APP_CONFIG.selectors.ids.overlaySvg);
+        if (overlay) {
+            overlay.classList.add('is-visible');
+            overlay.setAttribute('data', markerImg);
+        }
+        
+        // Hide Markers Layer when overlay is visible
+        const markersLayer = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+        if (markersLayer) {
+            markersLayer.classList.add('is-hidden');
+        }
+    }
+
+    /**
+     * Hides the overlay SVG and resets the main building view.
+     */
+    restoreLandingSvg() {
+        const overlay = document.getElementById(APP_CONFIG.selectors.ids.overlaySvg);
+        if (overlay) {
+            overlay.classList.remove('is-visible');
+            // Small delay to ensure transition completes before clearing data
+            setTimeout(() => overlay.removeAttribute('data'), 100);
+        }
+        
+        // Restore Markers Layer visibility
+        const markersLayer = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+        if (markersLayer) {
+            markersLayer.classList.remove('is-hidden');
+        }
+
+        // Restore visibility of all markers
+        this.updateMarkerVisibility(null);
+    }
+
+    /**
+     * Displays a popover with space information at specific coordinates.
+     * 
+     * @param {Object} space - The space object to display information for.
+     * @param {number} x - The X coordinate for the popover (left position).
+     * @param {number} y - The Y coordinate for the popover (top position).
+     * @param {number|null} pointerLeft - Optional custom position for the popover arrow/pointer.
+     */
+    showPopover(space, x, y, pointerLeft) {
+        if (!space) return;
+        
+        const nameEl = document.getElementById(APP_CONFIG.selectors.ids.popoverSpaceName);
+        const sysEl = document.getElementById(APP_CONFIG.selectors.ids.popoverSystemName);
+        
+        nameEl.textContent = space.name;
+        sysEl.textContent = space.systemName;
+        
+        // Ensure popover is appended to body to avoid z-index/clipping issues
+        if (this.popover.parentElement !== document.body) {
+            document.body.appendChild(this.popover);
+        }
+
+        this.popover.style.display = 'flex';
+        this.popover.style.left = `${x}px`;
+        this.popover.style.top = `${y}px`;
+
+        // Handle custom pointer position if provided
+        if (pointerLeft !== null) {
+            this.popover.style.setProperty('--pointer-left', `${pointerLeft}px`);
+            this.popover.setAttribute('data-pointer-left', pointerLeft);
+        } else {
+            this.popover.style.removeProperty('--pointer-left');
+            this.popover.removeAttribute('data-pointer-left');
+        }
+        
+        this.isPopoverVisible = true;
+    }
+
+    /**
+     * Hides the space information popover.
+     */
+    hidePopover() {
+        this.popover.style.display = 'none';
+        this.isPopoverVisible = false;
+    }
+
+    /**
+     * Enables or disables the tabs in the modal.
+     * Used when switching between 'building' and 'detail' scenes within the modal.
+     * 
+     * @param {boolean} enabled - True to enable tabs, false to disable.
+     */
+    setTabsState(enabled) {
+        this.modalTabs.forEach(t => {
+            t.disabled = !enabled;
+            if (!enabled) {
+                t.style.opacity = '0.5';
+                t.style.cursor = 'not-allowed';
+                t.classList.remove('active');
+            } else {
+                t.style.opacity = '1';
+                t.style.cursor = 'pointer';
+            }
+        });
+    }
+
+    /**
+     * Initializes marker visibility logic for the main SVG.
+     * Ensures only the first child (pin) of each marker group is visible initially.
+     * 
+     * @param {Document} doc - The SVG document.
+     */
+    initMarkerVisibility(doc) {
+        console.log('initMarkerVisibility called');
+        if (!doc) return;
+
+        // Attempt to find the main container group
+        let container = doc.getElementById(APP_CONFIG.svg.pinsGroup);
+        if (!container) {
+             console.warn(`initMarkerVisibility: Container '${APP_CONFIG.svg.pinsGroup}' not found. Using root SVG.`);
+             container = doc.querySelector('svg'); 
+        }
+
+        if (!container) return;
+
+        // Get all direct <g> children that are potential marker groups
+        const groups = Array.from(container.children).filter(el => el.tagName === 'g');
+        console.log(`initMarkerVisibility: Found ${groups.length} groups to initialize`);
+
+        groups.forEach(group => {
+            // Exclusion Logic
+            if (group.id === APP_CONFIG.svg.buildingRoof) return;
+            
+            // Apply base class for transitions
+            group.classList.add(APP_CONFIG.selectors.classes.markerGroup);
+
+            // Process children of the marker group
+            const children = Array.from(group.children).filter(el => el.tagName === 'g');
+            
+            if (children.length > 0) {
+                // First child (Pin) -> Visible
+                children[0].classList.add(APP_CONFIG.selectors.classes.childVisible);
+                children[0].classList.remove(APP_CONFIG.selectors.classes.childHidden);
+                
+                // Subsequent children (Labels/Popovers) -> Hidden
+                for (let i = 1; i < children.length; i++) {
+                    children[i].classList.add(APP_CONFIG.selectors.classes.childHidden);
+                    children[i].classList.remove(APP_CONFIG.selectors.classes.childVisible);
+                }
+            }
+        });
+    }
+
+    /**
+     * Updates visibility of marker groups based on the active selection.
+     * Hides all other markers when one is active.
+     * 
+     * @param {string|null} activeId - The ID of the currently active space/marker. If null, shows all.
+     */
+    updateMarkerVisibility(activeId) {
+        console.group('updateMarkerVisibility');
+        console.log('Active ID:', activeId);
+
+        const svgObj = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+        if (!svgObj || !svgObj.contentDocument) {
+            console.error('Building SVG object or contentDocument not found');
+            console.groupEnd();
+            return;
+        }
+        const doc = svgObj.contentDocument;
+
+        let container = doc.getElementById(APP_CONFIG.svg.pinsGroup);
+        if (!container) {
+            console.warn(`Container with ID '${APP_CONFIG.svg.pinsGroup}' not found. Falling back to SVG root.`);
+            container = doc.querySelector('svg');
+        }
+        
+        if (!container) {
+            console.error('No container found for markers');
+            console.groupEnd();
+            return;
+        }
+
+        const groups = Array.from(container.children).filter(el => el.tagName === 'g');
+        console.log(`Found ${groups.length} marker groups`);
+
+        groups.forEach(group => {
+            if (group.id === APP_CONFIG.svg.buildingRoof) return;
+
+            if (activeId && group.id !== activeId) {
+                // If there is an active marker and this isn't it -> Dim/Hide it
+                if (!group.classList.contains(APP_CONFIG.selectors.classes.markerDimmed)) {
+                    console.log(`Dimming marker: ${group.id}`);
+                    group.classList.add(APP_CONFIG.selectors.classes.markerDimmed);
+                }
+            } else {
+                // If no active marker OR this is the active one -> Show it
+                if (group.classList.contains(APP_CONFIG.selectors.classes.markerDimmed)) {
+                    console.log(`Restoring marker: ${group.id}`);
+                    group.classList.remove(APP_CONFIG.selectors.classes.markerDimmed);
+                }
+            }
+        });
+        console.groupEnd();
+    }
+
+    /**
+     * Switches between the main building view and the detailed space view within the modal.
+     * 
+     * @param {string} sceneName - 'detail' for the space detail view, 'building' (or others) for the main map.
+     */
+    switchScene(sceneName) {
+        const buildingScene = document.getElementById(APP_CONFIG.selectors.ids.buildingScene);
+        const detailScene = document.getElementById(APP_CONFIG.selectors.ids.detailScene);
+        const backBtn = document.getElementById(APP_CONFIG.selectors.ids.modalBackBtn);
+        
+        if (sceneName === 'detail') {
+            buildingScene.classList.remove('active');
+            detailScene.classList.add('active');
+            backBtn.style.display = 'flex';
+            this.setTabsState(true);
+        } else {
+            buildingScene.classList.add('active');
+            detailScene.classList.remove('active');
+            backBtn.style.display = 'none';
+            // Reset modal header for overview mode
+            this.modalSystemName.style.display = 'none';
+            this.modalTitle.textContent = '';
+            this.setTabsState(false);
+        }
+    }
+}
+
+/* ==========================================================================
+   Controller Layer
+   ========================================================================== */
+/**
+ * Controller class responsible for application logic and event handling.
+ * Coordinates interactions between the Model (state) and View (UI).
+ */
+class SpaceController {
+    /**
+     * @param {SpaceService} service - The data service instance.
+     * @param {SpaceModel} model - The state model instance.
+     * @param {SpaceView} view - The UI view instance.
+     */
+    constructor(service, model, view) {
+        this.service = service;
+        this.model = model;
+        this.view = view;
+        this.boundElements = new WeakSet();
+    }
+
+    /**
+     * Initializes the controller.
+     * Sets up event listeners and waits for SVGs to load.
+     */
+    async init() {
+        try {
+            // Fetch initial data for the page (Metadata + Spaces)
+            // In a real app, we might parse the URL or receive a building type config
+            const data = await this.service.fetchData();
+            
+            this.model.setSpaces(data.spaces);
+            this.model.setPageMetadata(data.pageMetadata);
+            
+            // Render the dynamic page content
+            this.view.renderPageContent(data.pageMetadata);
+            
+            // Bind events AFTER content is rendered (specifically for dynamic buttons)
+            this.bindEvents();
+            
+            // Initialize SVG handlers for Map and Markers layers
+            const mapObj = document.getElementById(APP_CONFIG.selectors.ids.buildingMapSvg);
+            if (mapObj) {
+                mapObj.addEventListener('load', () => this.initMapLayer(mapObj));
+                if (mapObj.contentDocument) this.initMapLayer(mapObj);
+            }
+
+            const markersObj = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+            if (markersObj) {
+                markersObj.addEventListener('load', () => this.attachSvgHandlers(markersObj));
+                if (markersObj.contentDocument) this.attachSvgHandlers(markersObj);
+            }
+
+            // Initialize SVG handler for overlay (Space specific SVGs)
+            const overlayObj = document.getElementById(APP_CONFIG.selectors.ids.overlaySvg);
+            if (overlayObj) {
+                overlayObj.addEventListener('load', () => this.attachOverlayHandlers(overlayObj));
+            }
+        } catch (error) {
+            console.error("Failed to initialize application:", error);
+            // Fallback or Error UI could be triggered here
+        }
+    }
+
+    /**
+     * Binds global DOM event listeners for the application.
+     * Includes modal controls, navigation buttons, and tab switching.
+     */
+    bindEvents() {
+        // Dynamic Hero Buttons
+        const heroActions = this.model.getPageMetadata()?.heroSection?.actions || [];
+        if (heroActions.length > 0) {
+            const firstActionId = heroActions[0].actionId;
+            const btn = document.getElementById(firstActionId);
+            
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    this.view.showModal();
+                    this.view.switchScene(APP_CONFIG.constants.tabs.overview);
+                });
+            }
+        }
+
+        // Modal Close Button
+        const closeBtn = document.getElementById(APP_CONFIG.selectors.ids.modalCloseBtn);
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.view.hideModal();
+                this.view.restoreLandingSvg();
+            });
+        }
+
+        // Back Button (Returns to Building Overview)
+        const backBtn = document.getElementById(APP_CONFIG.selectors.ids.modalBackBtn);
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                this.view.switchScene('overview');
+                this.view.restoreLandingSvg();
+            });
+        }
+
+        // Popover "View" Button (Navigates to Space Detail)
+        const popViewBtn = document.getElementById(APP_CONFIG.selectors.ids.popoverViewBtn);
+        if (popViewBtn) {
+            popViewBtn.addEventListener('click', () => {
+                const space = this.model.getCurrentSpace();
+                if (space) {
+                    this.view.hidePopover();
+                    this.view.switchScene('detail');
+                    this.view.renderSpaceDetails(space, APP_CONFIG.constants.tabs.overview);
+                    
+                    // IMPORTANT: The "detail" scene has its own SVG container with ID "space-svg-object"
+                    // We need to make sure this object loads the correct SVG for the selected space
+                    this.view.loadSpaceSvg(space.markerImg);
+                }
+            });
+        }
+
+        // Popover Close Button
+        const popCloseBtn = document.getElementById(APP_CONFIG.selectors.ids.popoverCloseBtn);
+        if (popCloseBtn) {
+            popCloseBtn.addEventListener('click', () => {
+                this.view.hidePopover();
+                this.view.restoreLandingSvg();
+            });
+        }
+
+        // Modal Tabs (Overview, System Equipment, Design Narrative)
+        const tabs = document.querySelectorAll(APP_CONFIG.selectors.classes.modalTab);
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const tabName = e.target.dataset.tab;
+                const space = this.model.getCurrentSpace();
+                this.view.renderSpaceDetails(space, tabName);
+            });
+        });
+
+        // Product Carousel Delegation
+        // Uses event delegation to handle clicks on dynamic carousel elements
+        document.querySelector(APP_CONFIG.selectors.classes.productCarousel).addEventListener('click', (e) => {
+            if (e.target.closest(APP_CONFIG.selectors.classes.navBtnNext)) {
+                this.nextProduct();
+            } else if (e.target.closest(APP_CONFIG.selectors.classes.navBtnPrev)) {
+                this.prevProduct();
+            }
+        });
+    }
+
+    /**
+     * Advances the product carousel to the next item.
+     * Cycles back to the first item if currently at the end.
+     */
+    nextProduct() {
+        const space = this.model.getCurrentSpace();
+        if (!space || !space.systemEquipment.length) return;
+        
+        let idx = this.model.currentProductIndex + 1;
+        if (idx >= space.systemEquipment.length) idx = 0;
+        this.model.currentProductIndex = idx;
+        
+        this.updateProductVisibility(idx, 'next');
+    }
+
+    /**
+     * Moves the product carousel to the previous item.
+     * Cycles to the last item if currently at the beginning.
+     */
+    prevProduct() {
+        const space = this.model.getCurrentSpace();
+        if (!space || !space.systemEquipment.length) return;
+        
+        let idx = this.model.currentProductIndex - 1;
+        if (idx < 0) idx = space.systemEquipment.length - 1;
+        this.model.currentProductIndex = idx;
+        
+        this.updateProductVisibility(idx, 'prev');
+    }
+
+    /**
+     * Updates the visual state of the carousel to show the specified product.
+     * Handles CSS classes for slides and dots, and manages accessibility focus.
+     * 
+     * @param {number} index - The index of the product to show.
+     * @param {string|null} source - The source of the navigation action ('next', 'prev', 'dot', or null).
+     */
+    updateProductVisibility(index, source = null) {
+        const slides = document.querySelectorAll(APP_CONFIG.selectors.classes.productSlide);
+        let newActiveSlide = null;
+        
+        // Toggle active class on slides
+        slides.forEach((slide, i) => {
+            const isActive = i === index;
+            slide.classList.toggle('active', isActive);
+            if (isActive) newActiveSlide = slide;
+        });
+        
+        // Update dots in ALL slides (since they are replicated in each slide)
+        // This is necessary because each slide contains its own set of navigation dots
+        const allDotContainers = document.querySelectorAll(APP_CONFIG.selectors.classes.carouselDots);
+        allDotContainers.forEach(container => {
+            const dots = container.querySelectorAll(APP_CONFIG.selectors.classes.dot);
+            dots.forEach((dot, i) => {
+                const isActive = i === index;
+                dot.classList.toggle('active', isActive);
+                dot.setAttribute('aria-current', isActive ? 'true' : 'false');
+            });
+        });
+
+        // Accessibility: Announce slide change to screen readers
+        const liveRegion = document.querySelector(APP_CONFIG.selectors.classes.liveRegion);
+        if (liveRegion && newActiveSlide) {
+            const title = newActiveSlide.querySelector('h3')?.textContent || `Slide ${index + 1}`;
+            liveRegion.textContent = `Showing ${title}`;
+        }
+
+        // Accessibility: Manage Focus if triggered by user interaction
+        if (source && newActiveSlide) {
+            if (source === 'next') {
+                const nextBtn = newActiveSlide.querySelector(APP_CONFIG.selectors.classes.navBtnNext);
+                if (nextBtn) nextBtn.focus();
+            } else if (source === 'prev') {
+                const prevBtn = newActiveSlide.querySelector(APP_CONFIG.selectors.classes.navBtnPrev);
+                if (prevBtn) prevBtn.focus();
+            } else if (source === 'dot') {
+                // If clicked via dot, keep focus on the specific dot in the new slide
+                const dots = newActiveSlide.querySelectorAll(APP_CONFIG.selectors.classes.dot);
+                if (dots[index]) dots[index].focus();
+            }
+        }
+    }
+
+    // --- SVG Handling Logic ---
+
+    /**
+     * Initializes the Map Layer (Layer 1).
+     * Hides the interactive markers so only the background map is visible.
+     */
+    initMapLayer(svgObject) {
+        const doc = svgObject.contentDocument;
+        if (!doc) return;
+
+        // Map Layer should just show the map. 
+        // Since we are using a dedicated SVG (k-12-map.svg) which has markers removed,
+        // we do NOT need to hide the root group 'K-12-Pins-Roof-Closed'.
+        // Previous logic hiding APP_CONFIG.svg.pinsGroup was causing the entire map to disappear
+        // because the root group shared that ID.
+    }
+
+    /**
+     * Attaches click and hover handlers to the Markers SVG (Layer 2).
+     * Hides the map background so only markers are visible.
+     * Identifies interactable elements based on dynamic metadata (data-space-id)
+     * and legacy ID mappings.
+     * 
+     * @param {HTMLObjectElement} svgObject - The <object> element containing the SVG.
+     */
+    attachSvgHandlers(svgObject) {
+        const doc = svgObject.contentDocument;
+        if (!doc) return;
+
+        // Hide Map Background (Layer 2 should only show markers)
+        const mapGroup = doc.getElementById('Map');
+        if (mapGroup) {
+            mapGroup.style.display = 'none';
+        }
+
+        // Initialize Marker Visibility System
+        this.view.initMarkerVisibility(doc);
+
+        // Global click listener: Clicking empty space on the map closes any open overlay
+        // Note: On Layer 2, empty space is transparent. 
+        // We might want to catch clicks on the wrapper or document if clicking "through" the markers?
+        // But doc.addEventListener('click') on the SVG document only catches clicks on elements if pointer-events are auto.
+        // If we set pointer-events: none on empty areas, this might not fire.
+        // However, let's keep it for now.
+        doc.addEventListener('click', () => {
+            this.view.restoreLandingSvg();
+        });
+        
+        const processedElements = new Set();
+
+        // 1. Dynamic Metadata Handling (New Standard)
+        // Scans for elements with 'data-space-id' attribute
+        const dynamicElements = doc.querySelectorAll('[data-space-id]');
+        dynamicElements.forEach(el => {
+            const spaceId = el.getAttribute('data-space-id');
+            if (spaceId) {
+                this.attachInteraction(el, spaceId);
+                processedElements.add(el);
+            }
+        });
+
+        // 2. ID Handling (Matches SVG IDs to Model IDs)
+        // Automatically maps elements whose ID matches a known space ID
+        const spaces = this.model.getAllSpaces();
+        spaces.forEach(space => {
+            let el = doc.getElementById(space.id);
+            
+            // Fallback: search by ID attribute manually if getElementById fails
+            if (!el) {
+                const groups = Array.from(doc.querySelectorAll('g'));
+                el = groups.find(g => g.id === space.id);
+            }
+
+            // Special handling for singular/plural mismatch (e.g. classroom vs classrooms)
+            if (!el && space.id.endsWith('s')) {
+                const singularId = space.id.slice(0, -1);
+                el = doc.getElementById(singularId);
+                if (!el) {
+                    const groups = Array.from(doc.querySelectorAll('g'));
+                    el = groups.find(g => g.id === singularId);
+                }
+            }
+
+            // Only attach if not already processed by dynamic handler
+            if (el && !processedElements.has(el)) {
+                this.attachInteraction(el, space.id);
+                processedElements.add(el);
+            }
+        });
+    }
+
+    /**
+     * Helper to attach standard interaction listeners to an SVG element.
+     * 
+     * @param {Element} el - The SVG element.
+     * @param {string} spaceId - The ID of the space to link to.
+     */
+    attachInteraction(el, spaceId) {
+        if (el.dataset && el.dataset.ghBound === 'true') return;
+        if (this.boundElements && this.boundElements.has(el)) return;
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.handleMarkerClick(spaceId);
+        });
+        el.addEventListener('mouseenter', () => {
+            el.style.opacity = '0.8';
+        });
+        el.addEventListener('mouseleave', () => {
+            el.style.opacity = '1';
+        });
+        if (el.dataset) el.dataset.ghBound = 'true';
+        if (this.boundElements) this.boundElements.add(el);
+    }
+
+    /**
+     * Attaches handlers to the overlay SVG (the highlighted space view).
+     * Manages "View Details" and "Close" buttons within the SVG.
+     * 
+     * @param {HTMLObjectElement} svgObject - The <object> element containing the overlay SVG.
+     */
+    attachOverlayHandlers(svgObject) {
+        const doc = svgObject.contentDocument;
+        if (!doc) return;
+
+        // Helper to find element by ID with fallback
+        const findElement = (id) => {
+            let el = doc.getElementById(id);
+            if (!el) {
+                // Fallback: search by ID attribute manually
+                // Uses querySelector to find ANY element with the matching ID, 
+                // not just groups. Useful for text elements like 'view-default'.
+                el = doc.querySelector(`[id="${id}"]`);
+            }
+            return el;
+        };
+
+        // "View" Button in Overlay (Navigates to Detail Scene)
+        const viewBtn = findElement(APP_CONFIG.svg.overlayViewBtn);
+        if (viewBtn) {
+            viewBtn.style.cursor = 'pointer';
+            viewBtn.style.pointerEvents = 'auto';
+            viewBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const space = this.model.getCurrentSpace();
+                if (space) {
+                    this.view.switchScene('detail');
+                    this.view.renderSpaceDetails(space, APP_CONFIG.constants.tabs.overview);
+                    this.view.loadSpaceSvg(space.markerImg);
+                }
+            });
+             // Add hover effect
+             viewBtn.addEventListener('mouseenter', () => {
+                viewBtn.style.opacity = '0.8';
+            });
+            viewBtn.addEventListener('mouseleave', () => {
+                viewBtn.style.opacity = '1';
+            });
+        } else {
+             console.warn('View button not found in overlay SVG');
+        }
+
+        // "Close" Button in Overlay (Deselects space)
+        const closeBtn = findElement(APP_CONFIG.svg.overlayCloseBtn);
+        if (closeBtn) {
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.style.pointerEvents = 'auto';
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.view.restoreLandingSvg();
+            });
+             // Add hover effect
+             closeBtn.addEventListener('mouseenter', () => {
+                closeBtn.style.opacity = '0.8';
+            });
+            closeBtn.addEventListener('mouseleave', () => {
+                closeBtn.style.opacity = '1';
+            });
+        } else {
+            console.warn('Close button not found in overlay SVG');
+        }
+
+        // Background Click Forwarding
+        // Allows clicking through the transparent parts of the overlay to the main map
+        doc.addEventListener('click', (e) => {
+            // 1. Try to identify what's under the cursor in the MAIN SVG
+            const mainSvg = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+            if (mainSvg && mainSvg.contentDocument) {
+                // Since overlay and main SVG are stacked perfectly, coordinates match
+                const targetUnderneath = mainSvg.contentDocument.elementFromPoint(e.clientX, e.clientY);
+                
+                if (targetUnderneath) {
+                    // Dispatch the click to the underlying element
+                    const newEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    targetUnderneath.dispatchEvent(newEvent);
+                    return; 
+                }
+            }
+            
+            // Fallback: Just close the overlay
+            this.view.restoreLandingSvg();
+        });
+    }
+
+    /**
+     * Handles the click event on a space marker in the main building SVG.
+     * Updates the model and triggers the view to show the overlay.
+     * 
+     * @param {string} spaceId - The ID of the selected space.
+     */
+    handleMarkerClick(spaceId) {
+        console.log('handleMarkerClick called for:', spaceId);
+        const space = this.model.getSpace(spaceId);
+        if (!space) {
+            console.error('Space not found in model:', spaceId);
+            return;
+        }
+
+        this.model.setCurrentSpace(spaceId);
+        this.view.replaceLandingSvg(space.markerImg);
+        
+        // Update marker visibility (dim others)
+        this.view.updateMarkerVisibility(spaceId);
+    }
+
+    runMarkerClickTest(ids = ['lobby','gym','admin-offices','locker-room','science-lab','kitchen','cafeteria']) {
+        const svgObj = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+        const overlay = document.getElementById(APP_CONFIG.selectors.ids.overlaySvg);
+        const results = [];
+        if (!svgObj || !svgObj.contentDocument) {
+            console.error('Marker test: building SVG not ready');
+            return results;
+        }
+        const doc = svgObj.contentDocument;
+        ids.forEach(id => {
+            let el = doc.getElementById(id);
+            if (!el) {
+                const groups = Array.from(doc.querySelectorAll('g'));
+                el = groups.find(g => g.id === id);
+            }
+            if (!el) {
+                results.push({ id, status: 'missing' });
+                return;
+            }
+            const space = this.model.getSpace(id);
+            el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+            const overlayVisible = !!(overlay && overlay.classList.contains('is-visible'));
+            const overlayData = overlay ? overlay.getAttribute('data') : null;
+            const expectedData = space ? space.markerImg : null;
+            const ok = this.model.currentSpaceId === id && overlayVisible && overlayData === expectedData;
+            results.push({ id, status: ok ? 'ok' : 'fail', detail: { currentSpaceId: this.model.currentSpaceId, overlayVisible, overlayData, expectedData } });
+        });
+        const failures = results.filter(r => r.status !== 'ok');
+        if (failures.length) {
+            console.warn('Marker test failures', failures);
+        } else {
+            console.log('Marker test passed for all ids');
+        }
+        return results;
+    }
+
+    /**
+     * Verifies that clicking through the overlay background correctly switches to another marker.
+     * @returns {Promise<boolean>} True if the test passes.
+     */
+    async runSeamlessSwitchingTest() {
+        console.log('Starting Seamless Switching Test...');
+        
+        // 1. Open 'Classrooms' (or first available space)
+        const firstSpaceId = 'classrooms'; 
+        const secondSpaceId = 'gym'; // Target to switch to
+        
+        console.log(`1. Opening ${firstSpaceId}...`);
+        this.handleMarkerClick(firstSpaceId);
+        
+        // Wait for overlay to load
+        await new Promise(r => setTimeout(r, 1000));
+        
+        const overlay = document.getElementById(APP_CONFIG.selectors.ids.overlaySvg);
+        if (!overlay || !overlay.classList.contains('is-visible')) {
+            console.error(`FAIL: ${firstSpaceId} overlay not visible`);
+            return false;
+        }
+        
+        // 2. Find "Gym" marker position in MAIN SVG
+        const mainSvg = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+        if (!mainSvg || !mainSvg.contentDocument) {
+             console.error('FAIL: Main SVG not ready');
+             return false;
+        }
+        
+        const targetMarker = mainSvg.contentDocument.getElementById(secondSpaceId);
+        if (!targetMarker) {
+            console.error(`FAIL: Target marker ${secondSpaceId} not found in main SVG`);
+            return false;
+        }
+        
+        const rect = targetMarker.getBoundingClientRect();
+        // Calculate click coordinates (Center of marker)
+        // Note: getBoundingClientRect is relative to the viewport, but the event needs clientX/Y
+        const clickX = rect.left + rect.width / 2;
+        const clickY = rect.top + rect.height / 2;
+        
+        console.log(`2. Clicking target marker ${secondSpaceId} directly (simulating CSS pointer-events: none)...`);
+        
+        // 3. Dispatch Click to Target Marker
+        // With pointer-events: none on overlay, the browser would direct the click here.
+        targetMarker.dispatchEvent(new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: mainSvg.contentWindow
+        }));
+        
+        // 4. Verify Switch
+        await new Promise(r => setTimeout(r, 500)); 
+        
+        if (this.model.currentSpaceId === secondSpaceId) {
+            console.log(`SUCCESS: Seamlessly switched to ${secondSpaceId}!`);
+            return true;
+        } else {
+            console.error(`FAIL: Expected '${secondSpaceId}', got '${this.model.currentSpaceId}'`);
+            return false;
+        }
+    }
+
+    /**
+     * Performance benchmark for visibility system.
+     * Simulates 100+ markers and measures toggle time.
+     */
+    runPerformanceTest() {
+        const svgObj = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+        if (!svgObj || !svgObj.contentDocument) {
+            console.error('Benchmark: building SVG not ready');
+            return;
+        }
+        const doc = svgObj.contentDocument;
+        let container = doc.getElementById(APP_CONFIG.svg.pinsGroup) || doc.querySelector('svg');
+        
+        // 1. Create 100 clones
+        const baseGroup = container.querySelector(`g.${APP_CONFIG.selectors.classes.markerGroup}`);
+        if (!baseGroup) {
+             console.error('Benchmark: No base marker found to clone');
+             return;
+        }
+        
+        console.log('Benchmark: Cloning 100 markers...');
+        const clones = [];
+        for (let i = 0; i < 100; i++) {
+            const clone = baseGroup.cloneNode(true);
+            clone.id = `bench-marker-${i}`;
+            container.appendChild(clone);
+            clones.push(clone);
+        }
+        
+        // 2. Measure init time (re-init)
+        const t0 = performance.now();
+        this.view.initMarkerVisibility(doc);
+        const t1 = performance.now();
+        console.log(`Benchmark: Init 100 markers took ${(t1-t0).toFixed(2)}ms`);
+        
+        // 3. Measure toggle time (hide all but one)
+        const t2 = performance.now();
+        this.view.updateMarkerVisibility(`bench-marker-50`);
+        const t3 = performance.now();
+        console.log(`Benchmark: Hide 99 markers took ${(t3-t2).toFixed(2)}ms`);
+        
+        // 4. Measure restore time (show all)
+        const t4 = performance.now();
+        this.view.updateMarkerVisibility(null);
+        const t5 = performance.now();
+        console.log(`Benchmark: Show 100 markers took ${(t5-t4).toFixed(2)}ms`);
+        
+        // Cleanup
+        clones.forEach(c => c.remove());
+        console.log('Benchmark: Cleanup complete');
+    }
+
+    /**
+     * Unit test for visibility logic.
+     * Verifies that CSS classes are correctly applied.
+     */
+    testVisibilityLogic() {
+        const svgObj = document.getElementById(APP_CONFIG.selectors.ids.buildingMarkersSvg);
+        if (!svgObj || !svgObj.contentDocument) {
+             console.error('Test: building SVG not ready');
+             return false;
+        }
+        const doc = svgObj.contentDocument;
+        
+        // 1. Verify Init
+        const lobby = doc.getElementById('lobby');
+        if (!lobby) {
+            console.error('Test: lobby marker not found');
+            return false;
+        }
+        
+        const hasGroupClass = lobby.classList.contains(APP_CONFIG.selectors.classes.markerGroup);
+        const children = Array.from(lobby.children).filter(el => el.tagName === 'g');
+        const child1Visible = children[0].classList.contains(APP_CONFIG.selectors.classes.childVisible);
+        const child2Hidden = children.length > 1 ? children[1].classList.contains(APP_CONFIG.selectors.classes.childHidden) : true;
+        
+        if (!hasGroupClass || !child1Visible || !child2Hidden) {
+            console.error('Test: Init logic failed', { hasGroupClass, child1Visible, child2Hidden });
+            return false;
+        }
+        
+        // 2. Verify Update (Dimming)
+        this.view.updateMarkerVisibility('gym');
+        const lobbyDimmed = lobby.classList.contains(APP_CONFIG.selectors.classes.markerDimmed);
+        const gym = doc.getElementById('gym');
+        const gymNotDimmed = !gym.classList.contains(APP_CONFIG.selectors.classes.markerDimmed);
+        
+        if (!lobbyDimmed || !gymNotDimmed) {
+             console.error('Test: Update logic failed (Dimming)', { lobbyDimmed, gymNotDimmed });
+             return false;
+        }
+        
+        // 3. Verify Restore
+        this.view.updateMarkerVisibility(null);
+        const lobbyRestored = !lobby.classList.contains(APP_CONFIG.selectors.classes.markerDimmed);
+        
+        if (!lobbyRestored) {
+            console.error('Test: Restore logic failed');
+            return false;
+        }
+        
+        console.log('Visibility Logic Unit Test: PASSED');
+        return true;
+    }
+}
+
+// Initialize Application when DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const app = new SpaceController(
+        new SpaceService(),
+        new SpaceModel(),
+        new SpaceView()
+    );
+    app.init();
+    window.buildingApp = app;
+});

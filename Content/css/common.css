@@ -1,0 +1,3150 @@
+  /* ==========================================================================
+      Common Styles - Shared Base Styles
+    --------------------------------------------------------------------------
+    Think of this file as your "design system layer":
+    - Design tokens (CSS variables) define brand colors, typography, spacing.
+    - Global resets & a11y helpers establish consistent defaults.
+    - Reusable primitives (buttons, grids, form controls, typography scale)
+      behave like a lightweight utility framework similar to Tailwind CSS.
+    - Page-level components (breadcrumb, headers, layouts) are composed from
+      these primitives for consistency.
+    ========================================================================== */
+  /* Mobile: max-width: 767px */
+  /* Tablet: min-width: 768px and max-width: 1024px */
+  /* Desktop: min-width: 1025px (default/base styles) */
+
+  /* ==========================================================================
+    CSS Custom Properties - Design System Tokens
+    --------------------------------------------------------------------------
+    Single source of truth for:
+    - Brand palette          (primary / secondary / greys)
+    - Typography scale       (font families, sizes, line heights)
+    - Layout metrics         (container widths, sidebar widths, cards)
+    - Motion & layering      (transitions, shadows, z-index scale)
+    All components and utilities below should consume these variables instead
+    of hard-coded values wherever possible.
+    ========================================================================== */
+  :root {
+    /* Color Constants */
+    --color-white: 255, 255, 255;
+    --color-dark-blue: 0, 85, 150;
+    --color-dark-gray: 95, 96, 98;
+    --color-near-black: 51, 51, 51;
+    --color-near-black-2: 13, 13, 13;
+    --color-black: 0, 0, 0;
+    --color-medium-gray: 167, 169, 172;
+    --color-light-gray: 246, 246, 246;
+    --color-border-gray: 214, 214, 214;
+    --color-text-gray: 102, 102, 102;
+    --color-tag-gray: 150, 150, 150;
+    --color-sky-blue: 52, 168, 246;
+    --color-orange: 236, 136, 29;
+    
+    /* UI State Colors (for design-time helpers, modals, etc.) */
+    --color-warning-bg: 255, 243, 205;
+    --color-warning-border: 255, 193, 7;
+    --color-warning-hover: 255, 230, 156;
+    --color-warning-text: 133, 100, 4;
+    --color-success-bg: 212, 237, 218;
+    --color-success-border: 40, 167, 69;
+    --color-success-text: 21, 87, 36;
+    --color-error: 211, 47, 47;
+    --color-nav-hover-blue: 52, 168, 246;
+    --color-secondary-blue: 52, 168, 246;
+
+    /* Shared header/footer tokens */
+    --border-radius: 21px;
+    --font-size-base: 15px;
+    --font-size-nav: 15px;
+    --transition-base: all 0.2s ease-in-out;
+    --max-width-container: 1248px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(var(--color-black), 0.05);
+    --shadow-lg: 0 4px 12px rgba(var(--color-black), 0.1);
+
+    /* Typography */
+    --font-family-thin: "SharpSans-Thin", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    --font-family-light: "SharpSans-Light", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    --font-family-book: "SharpSans-Book", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    --font-family-regular: "SharpSans-Book", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    --font-family-medium: "SharpSans-Medium", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    --font-family-semi-bold: "SharpSans-SemiBold", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    --font-family-bold: "SharpSans-Bold", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    --font-family-extra-bold: "SharpSans-ExtraBold", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+    
+    --line-height-relaxed: 1.6;
+    --line-height-loose: 1.8;
+
+    /* Layout */
+    --container-max-width: 1248px;
+    --card-max-width: 288px;
+    --card-height: 354px;
+    --sidebar-width: 280px;
+    --sidebar-width-tablet: 240px;
+    --card-back-height: 308px;
+    --icon-visibility-width: 15px;
+    --icon-visibility-on-height: 10px;
+    --icon-visibility-off-height: 14px;
+    --icon-scroll-top: 36px;
+
+    /* Responsive Container Padding */
+    --container-padding-desktop: 48px;
+    --container-padding-tablet: 32px;
+    --container-padding-mobile: 24px;
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition: 0.3s ease;
+
+    /* Z-Index Scale */
+    --z-close-btn: 10;
+    --z-skip-link: 100;
+    --z-scroll-top: 1000;
+  }
+
+  /* ==========================================================================
+    Font Definitions
+    --------------------------------------------------------------------------
+    Font-family aliases used throughout the typography scale:
+    - SharpSans-Book / -Medium / -Bold: core brand text styles
+    - SharpSans variants: alternative headline styles
+    Note: Using SharpSans font family exclusively.
+    ========================================================================== */
+  @font-face {
+    font-family: "SharpSans-Book";
+    src: url("../font/SharpSans-Book.otf") format("opentype");
+    font-display: swap;
+    font-weight: 400;
+  }
+
+  @font-face {
+    font-family: "SharpSans-Medium";
+    src: url("../font/SharpSans-Medium.otf") format("opentype");
+    font-display: swap;
+    font-weight: 500;
+  }
+
+  @font-face {
+    font-family: "SharpSans-Bold";
+    src: url("../font/SharpSans-Bold.otf") format("opentype");
+    font-display: swap;
+    font-weight: 700;
+  }
+
+  @font-face {
+    font-family: "SharpSans-Light";
+    src: url("../font/SharpSans-Light.otf") format("opentype");
+    font-display: swap;
+    font-weight: 300;
+  }
+
+  @font-face {
+    font-family: "SharpSans-Thin";
+    src: url("../font/SharpSans-Thin.otf") format("opentype");
+    font-display: swap;
+    font-weight: 100;
+  }
+
+  @font-face {
+    font-family: "SharpSans-SemiBold";
+    src: url("../font/SharpSans-SemiBold.otf") format("opentype");
+    font-display: swap;
+    font-weight: 600;
+  }
+
+  @font-face {
+    font-family: "SharpSans-ExtraBold";
+    src: url("../font/SharpSans-ExtraBold.otf") format("opentype");
+    font-display: swap;
+    font-weight: 800;
+  }
+
+  @font-face {
+    font-family: "FontAwesome";
+    src: url("../font/fontawesome-webfont.eot?v=4.7.0");
+    src: url("../font/fontawesome-webfont.eot?#iefix&v=4.7.0")
+        format("embedded-opentype"),
+      url("../font/fontawesome-webfont.woff2?v=4.7.0") format("woff2"),
+      url("../font/fontawesome-webfont.woff?v=4.7.0") format("woff"),
+      url("../font/fontawesome-webfont.ttf?v=4.7.0") format("truetype"),
+      url("../font/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular")
+        format("svg");
+    font-weight: normal;
+    font-style: normal;
+  }
+  sub {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+    top: -2.6px;
+  }
+  .fa {
+    display: inline-block;
+    font: normal normal normal 14px/1 FontAwesome;
+    font-size: inherit;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .gs-action > .fa {
+    display: inline-block !important;
+  }
+
+  .fa-remove:before,
+  .fa-close:before,
+  .fa-times:before {
+    content: "\f00d";
+  }
+
+  .fa-pencil:before {
+    content: "\f040";
+  }
+
+  .fa-ban:before {
+    content: "\f05e";
+  }
+
+  .fa-compress:before {
+    content: "\f066";
+  }
+
+  .fa-plus:before {
+    content: "\f067";
+  }
+
+  .fa-minus:before {
+    content: "\f068";
+  }
+
+  .fa-asterisk:before {
+    content: "\f069";
+  }
+
+  .fa-arrows-alt:before {
+    content: "\f0b2";
+  }
+
+  .fa-save:before,
+  .fa-floppy-o:before {
+    content: "\f0c7";
+  }
+
+  .fa-rotate-left:before,
+  .fa-undo:before {
+    content: "\f0e2";
+  }
+  .fa-share-alt:before {
+    content: "\f1e0";
+    color: rgb(var(--color-dark-blue));
+  }
+  .fa-twitter:before {
+    content: "\f099";
+  }
+  .fa-linkedin:before {
+    content: "\f0e1";
+  }
+  .fa-facebook-f:before,
+  .fa-facebook:before {
+    content: "\f09a";
+  }
+  .fa-envelope:before {
+    content: "\f0e0";
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  .sr-only-focusable:active,
+  .sr-only-focusable:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+  }
+
+  /* ==========================================================================
+    CSS Reset & Base
+    --------------------------------------------------------------------------
+    - Normalize box model and typography defaults.
+    - Set global body typography and background.
+    - Prefer system fonts with brand overrides from the font-face block.
+    ========================================================================== */
+  *,
+  *::before,
+  *::after {
+    box-sizing: inherit;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    box-sizing: border-box;
+    font-size: 16px;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-family-book);
+    font-size: 15px;
+    line-height: var(--line-height-relaxed);
+    background: rgb(var(--color-white));
+    color: rgb(var(--color-near-black));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ==========================================================================
+    Accessibility Utilities
+    --------------------------------------------------------------------------
+    - `.sr-only` / `.skip-link` mirror common a11y utility patterns.
+    - Focus styles are visible by default and enhanced for `:focus-visible`.
+    - These behave similarly to Tailwind's a11y helpers.
+    ========================================================================== */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 8px;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+    background-color: rgb(var(--color-white));
+    border: 2px solid rgb(var(--color-dark-blue));
+    border-radius: 8px;
+  }
+
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: rgb(var(--color-dark-blue));
+    color: rgb(var(--color-white));
+    padding: 8px;
+    text-decoration: none;
+    z-index: var(--z-skip-link);
+    border-radius: 0 0 4px 0;
+  }
+
+  .skip-link:focus {
+    top: 0;
+  }
+
+  /* ==========================================================================
+    Focus Styles for Accessibility
+    --------------------------------------------------------------------------
+    Global focus ring using the primary color, with `:focus-visible` support
+    to avoid noisy outlines for mouse interactions in modern browsers.
+    ========================================================================== */
+  *:focus, *:hover {
+    /* outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px; */
+    outline: none !important;
+  }
+
+  *:focus:not(:focus-visible) {
+    outline: none !important;
+  }
+
+  *:focus-visible {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  /* ==========================================================================
+    Layout Components - Page Shell
+    --------------------------------------------------------------------------
+    High-level layout primitives used across pages:
+    - `main`: page content container with max-width + padding.
+    - Additional grid and column systems are defined later in the file.
+    ========================================================================== */
+  main {
+    padding: 0;
+    /* max-width: var(--container-max-width); */
+    margin: 0 auto 40px auto;
+  }
+
+  a {
+    color: rgb(var(--color-dark-blue));
+    text-decoration: none;
+  }
+  a:hover {
+    color: rgb(var(--color-sky-blue));
+    text-decoration: none;
+  }
+  a:focus {
+    color: rgb(var(--color-dark-blue));
+    text-decoration: none;
+  }
+  a:active {
+    color: rgb(var(--color-dark-blue));
+    text-decoration: none;
+  }
+  .desktop-logo-white,
+  .mobile-logo-white {
+    display: none;
+  }
+
+  
+  .hide, .hidden {
+    display: none !important;
+  }
+  /* ==========================================================================
+    Breadcrumb Navigation
+    --------------------------------------------------------------------------
+    Composable breadcrumb using:
+    - `.breadcrumb`      : container spacing.
+    - `.breadcrumb-list` : horizontal flex list.
+    - `.breadcrumb-item` : individual crumb styling.
+    - `.breadcrumb-link` : interactive states.
+    This behaves like a small component built from layout + text primitives.
+    ========================================================================== */
+  .breadcrumb {
+    margin-bottom: 22px !important;
+    max-width: var(--container-max-width);
+    width: 100%;
+  }
+
+  .breadcrumb-list {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: rgb(var(--color-dark-gray));
+  }
+
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    font-family: var(--font-family-semi-bold);
+    font-size: 11px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+  }
+
+  .breadcrumb-arrow {
+    font-size: 16px;
+    color: rgb(var(--color-dark-gray));
+    margin: 0;
+    vertical-align: middle;
+  }
+
+  .breadcrumb-link {
+    color: rgb(var(--color-near-black));
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .breadcrumb-link:hover,
+  .breadcrumb-link:focus {
+    color: rgb(var(--color-dark-blue));
+  }
+
+  .breadcrumb-current {
+    color: rgb(var(--color-medium-gray));
+    font-weight: 500;
+  }
+  .max-width-1248 {
+    max-width: 1248px;
+  }
+  .m-auto {
+    margin: 0 auto;
+  }
+  .w-full {
+    width: 100%;
+  }
+  .w-fit-content{
+    width: fit-content !important;
+  }
+  /* ==========================================================================
+    Link Utility Class
+    --------------------------------------------------------------------------
+    Utility class for consistent link styling with typography and interactive states.
+    ========================================================================== */
+  .link-small {
+    font-size: 14px;
+    color: rgb(var(--color-dark-blue));
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .link-small:hover,
+  .link-small:focus {
+    color: rgb(var(--color-dark-blue));
+    text-decoration: underline;
+  }
+
+  /* ==========================================================================
+    Page Header
+    --------------------------------------------------------------------------
+    Flexible heading + subheading pattern used across templates.
+    Aligns with the typography scale defined in the `.text-content` section.
+    ========================================================================== */
+  .page-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .page-header h1 {
+    font-family: var(--font-family-bold);
+    font-weight: 700;
+    font-size: clamp(24px, 5vw, 40px);
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+  h1{
+    font-family: var(--font-family-bold);
+    font-weight: 700;
+    font-size: 32px;
+  }
+  .page-header p {
+    font-size: 15px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    line-height: 22px;
+    margin: 0 auto;
+    text-align: left;
+    width: 100%;
+  }
+
+  /* ==========================================================================
+    Scroll to Top Button
+    --------------------------------------------------------------------------
+    Floating action button composed from:
+    - Fixed positioning tokens (bottom/right offsets).
+    - Icon font styles (`.material-symbols-outlined`).
+    - Hover/focus state using brand blue.
+    ========================================================================== */
+  .scroll-to-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 36px;
+    height: 36px;
+    color: rgb(var(--color-dark-blue));
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-scroll-top);
+    text-decoration: none;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+    font-size: 22px;
+    color: rgb(var(--color-dark-gray));
+  }
+
+  .scroll-to-top .material-symbols-outlined {
+    font-size: 36px;
+    font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+    line-height: 1;
+    color: rgb(var(--color-sky-blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .scroll-to-top:hover .material-symbols-outlined,
+  .scroll-to-top:focus .material-symbols-outlined {
+    color: rgb(var(--color-white));
+    transform: translateY(-2px);
+    background-color: rgb(var(--color-sky-blue));
+    border-radius: 50%;
+  }
+
+  /* ==========================================================================
+    Responsive Design - Base
+    --------------------------------------------------------------------------
+    Base typography and spacing tweaks for smaller screens.
+    Additional breakpoint-specific grid behavior is defined
+    alongside the grid system later in the file.
+    ========================================================================== */
+
+  /* ==========================================================================
+      Typography Utilities - Text Content Scale
+      --------------------------------------------------------------------------
+      `.text-content` acts as a base block-level text container.
+      Variant classes encode both weight and semantic role:
+        - bold-*     : strong headings / emphasis
+        - medium-*   : primary headings / labels
+        - regular-*  : body text
+      Suffix scale:
+        - h1–h3  : display/section headings
+        - st1–st3: section titles / lead-ins
+        - p1–p3  : body copy sizes
+      This mirrors a Tailwind-like type ramp while keeping semantic class names.
+      ========================================================================== */
+  .text-content {
+    text-align: left;
+    margin-bottom: 20px;
+  }
+
+  .text-content.bold-h1 {
+    font-family: var(--font-family-bold);
+    font-size: 42px;
+    font-weight: 700;
+    color: rgb(var(--color-near-black));
+  }
+
+  .text-content.bold-h2 {
+    font-family: var(--font-family-bold);
+    font-size: 32px;
+    font-weight: 700;
+    color: rgb(var(--color-near-black));
+  }
+
+  .text-content.bold-h3 {
+    font-family: var(--font-family-bold);
+    font-size: 22px;
+    font-weight: 700;
+    color: rgb(var(--color-near-black));
+  }
+
+  .text-content.bold-st1 {
+    font-family: var(--font-family-bold);
+    font-size: 18px;
+    font-weight: 700;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.bold-st2 {
+    font-family: var(--font-family-bold);
+    font-size: 16px;
+    font-weight: 700;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.bold-st3 {
+    font-family: var(--font-family-bold);
+    font-size: 14px;
+    font-weight: 700;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.bold-p1 {
+    font-family: var(--font-family-bold);
+    font-size: 15px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.bold-p2 {
+    font-family: var(--font-family-bold);
+    font-size: 14px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.bold-p3 {
+    font-family: var(--font-family-bold);
+    font-size: 13px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.medium-h1 {
+    font-family: var(--font-family-medium);
+    font-size: 42px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.medium-h2 {
+    font-family: var(--font-family-medium);
+    font-size: 32px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.medium-h3 {
+    font-family: var(--font-family-medium);
+    font-size: 22px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.medium-st1 {
+    font-family: var(--font-family-medium);
+    font-size: 18px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.medium-st2 {
+    font-family: var(--font-family-medium);
+    font-size: 16px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.medium-st3 {
+    font-family: var(--font-family-medium);
+    font-size: 14px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.medium-p1 {
+    font-family: var(--font-family-medium);
+    font-size: 15px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.medium-p2 {
+    font-family: var(--font-family-medium);
+    font-size: 14px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.medium-p3 {
+    font-family: var(--font-family-medium);
+    font-size: 13px;
+    font-weight: 500;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.regular-h1 {
+    font-family: var(--font-family-book);
+    font-size: 42px;
+    font-weight: 400;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.regular-h2 {
+    font-family: var(--font-family-book);
+    font-size: 32px;
+    font-weight: 400;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.regular-h3 {
+    font-family: var(--font-family-book);
+    font-size: 22px;
+    font-weight: 400;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.regular-st1 {
+    font-family: var(--font-family-book);
+    font-size: 18px;
+    font-weight: 400;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.regular-st2 {
+    font-family: var(--font-family-book);
+    font-size: 16px;
+    font-weight: 400;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.regular-st3 {
+    font-family: var(--font-family-book);
+    font-size: 14px;
+    font-weight: 400;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.regular-p1 {
+    font-family: var(--font-family-book);
+    font-size: 15px;
+    font-weight: 400;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.regular-p2 {
+    font-family: var(--font-family-book);
+    font-size: 14px;
+    font-weight: 400;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  .text-content.regular-p3 {
+    font-family: var(--font-family-book);
+    font-size: 13px;
+    font-weight: 400;
+    color: rgb(var(--color-near-black));
+    margin-bottom: 5px;
+    text-align: left;
+  }
+
+  /* ==========================================================================
+      Title with Border-Bottom Utility
+      --------------------------------------------------------------------------
+      Common pattern for list/item titles with blue underline:
+      - Used in: assistance-list, info-list, news-list, dashboard
+      - Provides consistent styling for section titles
+      ========================================================================== */
+  .title-with-border {
+      font-family: var(--font-family-medium);
+      color: rgb(var(--color-near-black));
+      border-bottom: 2px solid rgb(var(--color-dark-blue));
+      padding-bottom: 8px;
+  }
+
+  .title-with-border--small {
+      padding-bottom: 6px;
+  }
+
+  .title-with-border--large {
+      padding-bottom: 10px;
+  }
+
+  /* ==========================================================================
+      Button System
+      --------------------------------------------------------------------------
+      Comprehensive button system with Primary, Secondary, Transparent variants,
+      each available in Default and Small sizes, with optional icon support.
+      
+      Design specifications:
+      - Default buttons: 52px height, 16px 20px padding, 15px font, 6px radius
+      - Small buttons: 32px height, 7px 20px padding, 13px font, 6px radius
+      - Font: SharpSans-Bold, 700 weight, uppercase, 0.56px letter-spacing
+      - Primary: Dark blue background, sky blue hover, gray disabled
+      - Secondary: Sky blue background, dark blue hover, gray disabled
+      - Transparent: White border, colored hover backgrounds, gray disabled
+      - Icons: Material icons with 8px gap, 15px font size (default) / 13px (small)
+      ========================================================================== */
+
+  /* ==========================================================================
+      Base Button Styles - Shared Properties
+      ========================================================================== */
+  [class*="btn-"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    border: 0;
+    border-radius: 18px;
+    font-family: var(--font-family-bold);
+    font-weight: 700;
+    font-style: normal;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    user-select: none;
+    transition: var(--transition-base);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    outline: none;
+  }
+
+  [class*="btn-"]:focus-visible {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  [class*="btn-"]:disabled,
+  [class*="btn-"][disabled] {
+    cursor: not-allowed;
+    opacity: 1;
+  }
+
+  /* ==========================================================================
+      Default Size Buttons (52px height)
+      ========================================================================== */
+
+  /* Primary Button - Default */
+  .btn-primary {
+    height: 52px;
+    padding: 16px 20px;
+    background-color: rgba(var(--color-dark-blue), 1);
+    color: rgba(var(--color-white), 1);
+    font-size: 15px;
+    letter-spacing: 0.56px;
+  }
+
+  .btn-primary:hover:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-secondary-blue), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-primary:active:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-dark-blue), 1);
+    color: rgba(var(--color-white), 1);
+    transform: translateY(1px);
+  }
+
+  .btn-primary:focus:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-primary:focus-visible:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-primary:focus-within:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-primary:target:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-dark-blue));
+    outline-offset: 2px;
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-primary:disabled,
+  .btn-primary[disabled] {
+    background-color: rgba(var(--color-tag-gray), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  /* Apply btn-primary styles to buttons within form container */
+  [data-sf-role="form-container"] button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 52px;
+    padding: 16px 20px;
+    border: 0;
+    border-radius: 6px;
+    background-color: rgba(var(--color-dark-blue), 1);
+    color: rgba(var(--color-white), 1);
+    font-family: var(--font-family-bold);
+    font-size: 15px;
+    font-weight: 700;
+    font-style: normal;
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    letter-spacing: 0.56px;
+    cursor: pointer;
+    user-select: none;
+    transition: var(--transition-base);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-drag: none;
+    outline: none;
+  }
+
+  [data-sf-role="form-container"] button:focus-visible {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  [data-sf-role="form-container"] button:hover:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-secondary-blue), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  [data-sf-role="form-container"] button:disabled,
+  [data-sf-role="form-container"] button[disabled] {
+    background-color: rgba(var(--color-tag-gray), 1);
+    color: rgba(var(--color-white), 1);
+    cursor: not-allowed;
+    opacity: 1;
+  }
+
+  /* Secondary Button - Default */
+  .btn-secondary {
+    height: 52px;
+    padding: 16px 20px;
+    background-color: rgba(var(--color-secondary-blue), 1);
+    color: rgba(var(--color-white), 1);
+    font-size: 15px;
+    letter-spacing: 0.56px;
+  }
+
+  .btn-secondary:hover:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-dark-blue), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-secondary:active:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-secondary-blue), 1);
+    color: rgba(var(--color-white), 1);
+    transform: translateY(1px);
+  }
+
+  .btn-secondary:focus:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  .btn-secondary:focus-visible:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  .btn-secondary:focus-within:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  .btn-secondary:target:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-secondary-blue));
+    outline-offset: 2px;
+  }
+
+  .btn-secondary:disabled,
+  .btn-secondary[disabled] {
+    background-color: rgba(var(--color-tag-gray), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  /* Primary Transparent Button - Default */
+  .btn-primary-transparent {
+    height: 52px;
+    padding: 16px 20px;
+    background-color: transparent;
+    border: 1px solid rgba(var(--color-white), 1);
+    color: rgba(var(--color-white), 1);
+    font-size: 15px;
+    letter-spacing: 0.56px;
+  }
+
+  .btn-primary-transparent:hover:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-dark-blue), 1);
+    border: 1px solid rgba(var(--color-dark-blue), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-primary-transparent:disabled,
+  .btn-primary-transparent[disabled] {
+    background-color: transparent;
+    border: 1px solid rgba(var(--color-tag-gray), 1);
+    color: rgba(var(--color-tag-gray), 1);
+  }
+
+  /* Secondary Transparent Button - Default */
+  .btn-secondary-transparent {
+    height: 52px;
+    padding: 16px 20px;
+    background-color: transparent;
+    border: 1px solid rgba(var(--color-white), 1);
+    color: rgba(var(--color-white), 1);
+    font-size: 15px;
+    letter-spacing: 0.56px;
+  }
+
+  .btn-secondary-transparent:hover:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-secondary-blue), 1);
+    border: 1px solid rgba(var(--color-secondary-blue), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-secondary-transparent:disabled,
+  .btn-secondary-transparent[disabled] {
+    background-color: transparent;
+    border: 1px solid rgba(var(--color-tag-gray), 1);
+    color: rgba(var(--color-tag-gray), 1);
+  }
+
+  /* ==========================================================================
+      Small Size Buttons (32px height)
+      ========================================================================== */
+
+  /* Primary Button - Small */
+  .btn-primary-small {
+    height: 32px;
+    padding: 7px 20px;
+    background-color: rgba(var(--color-dark-blue), 1);
+    color: rgba(var(--color-white), 1);
+    font-size: 13px;
+    letter-spacing: 0.56px;
+  }
+
+  .btn-primary-small:hover:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-secondary-blue), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-primary-small:active:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-dark-blue), 1);
+    color: rgba(var(--color-white), 1);
+    transform: translateY(1px);
+  }
+
+  .btn-primary-small:focus:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  .btn-primary-small:focus-visible:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  .btn-primary-small:focus-within:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  .btn-primary-small:target:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-dark-blue));
+    outline-offset: 2px;
+  }
+
+  .btn-primary-small:disabled,
+  .btn-primary-small[disabled] {
+    background-color: rgba(var(--color-tag-gray), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  /* Secondary Button - Small */
+  .btn-secondary-small {
+    height: 32px;
+    padding: 7px 20px;
+    background-color: rgba(var(--color-secondary-blue), 1);
+    color: rgba(var(--color-white), 1);
+    font-size: 13px;
+    letter-spacing: 0.56px;
+  }
+
+  .btn-secondary-small:hover:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-dark-blue), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-secondary-small:active:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-secondary-blue), 1);
+    color: rgba(var(--color-white), 1);
+    transform: translateY(1px);
+  }
+
+  .btn-secondary-small:focus:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  .btn-secondary-small:focus-visible:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  .btn-secondary-small:focus-within:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-black));
+    outline-offset: 2px;
+  }
+
+  .btn-secondary-small:target:not(:disabled):not([disabled]) {
+    outline: 2px solid rgb(var(--color-secondary-blue));
+    outline-offset: 2px;
+  }
+
+  .btn-secondary-small:disabled,
+  .btn-secondary-small[disabled] {
+    background-color: rgba(var(--color-tag-gray), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  /* Primary Transparent Button - Small */
+  .btn-primary-transparent-small {
+    height: 32px;
+    padding: 7px 20px;
+    background-color: transparent;
+    border: 1px solid rgba(var(--color-white), 1);
+    color: rgba(var(--color-white), 1);
+    font-size: 13px;
+    letter-spacing: 0.56px;
+  }
+
+  .btn-primary-transparent-small:hover:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-dark-blue), 1);
+    border: 1px solid rgba(var(--color-dark-blue), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-primary-transparent-small:disabled,
+  .btn-primary-transparent-small[disabled] {
+    background-color: transparent;
+    border: 1px solid rgba(var(--color-tag-gray), 1);
+    color: rgba(var(--color-tag-gray), 1);
+  }
+
+  /* Secondary Transparent Button - Small */
+  .btn-secondary-transparent-small {
+    height: 32px;
+    padding: 7px 20px;
+    background-color: transparent;
+    border: 1px solid rgba(var(--color-white), 1);
+    color: rgba(var(--color-white), 1);
+    font-size: 13px;
+    letter-spacing: 0.56px;
+  }
+
+  .btn-secondary-transparent-small:hover:not(:disabled):not([disabled]) {
+    background-color: rgba(var(--color-secondary-blue), 1);
+    border: 1px solid rgba(var(--color-secondary-blue), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  .btn-secondary-transparent-small:disabled,
+  .btn-secondary-transparent-small[disabled] {
+    background-color: transparent;
+    border: 1px solid rgba(var(--color-tag-gray), 1);
+    color: rgba(var(--color-tag-gray), 1);
+  }
+
+  /* ==========================================================================
+      Button Icons - Material Icons Support
+      ========================================================================== */
+
+  /* Default size buttons with icons */
+  .btn-primary .material-symbols-outlined,
+  .btn-secondary .material-symbols-outlined,
+  .btn-primary-transparent .material-symbols-outlined,
+  .btn-secondary-transparent .material-symbols-outlined {
+    font-size: 15px;
+    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Small size buttons with icons */
+  .btn-primary-small .material-symbols-outlined,
+  .btn-secondary-small .material-symbols-outlined,
+  .btn-primary-transparent-small .material-symbols-outlined,
+  .btn-secondary-transparent-small .material-symbols-outlined {
+    font-size: 13px;
+    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Icon color inheritance - icons inherit button text color */
+  [class*="btn-"] .material-symbols-outlined {
+    color: inherit;
+  }
+
+  /* Disabled state icon color */
+  [class*="btn-"]:disabled .material-symbols-outlined,
+  [class*="btn-"][disabled] .material-symbols-outlined {
+    color: inherit;
+  }
+
+  .gh-icon {
+    display: inline-block;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    -webkit-transition: all 0.3s ease;
+  }
+  .gh-icon-add-circle {
+    background-image: url("/Content/img/icons/iconography/icon-add-circle.svg");
+  }
+
+  .gh-icon-add-square {
+    background-image: url("/Content/img/icons/iconography/icon-add-square.svg");
+  }
+
+  .gh-icon-align-left {
+    background-image: url("/Content/img/icons/iconography/icon-align-left.svg");
+  }
+
+  .gh-icon-arrow-down {
+    background-image: url("/Content/img/icons/iconography/icon-arrow-down.svg");
+  }
+
+  .gh-icon-arrow-left {
+    background-image: url("/Content/img/icons/iconography/icon-arrow-left.svg");
+  }
+
+  .gh-icon-arrow-right {
+    background-image: url("/Content/img/icons/iconography/icon-arrow-right.svg");
+  }
+
+  .gh-icon-arrow-right-small {
+    background-image: url("/Content/img/icons/iconography/icon-arrow-right-small.svg");
+  }
+
+  .gh-icon-arrow-up {
+    background-image: url("/Content/img/icons/iconography/icon-arrow-up.svg");
+  }
+
+  .gh-icon-bookmark {
+    background-image: url("/Content/img/icons/iconography/icon-bookmark.svg");
+  }
+
+  .gh-icon-check {
+    background-image: url("/Content/img/icons/iconography/icon-check.svg");
+  }
+
+  .gh-icon-check-circle {
+    background-image: url("/Content/img/icons/iconography/icon-check-circle.svg");
+  }
+
+  .gh-icon-chevron-down {
+    background-image: url("/Content/img/icons/iconography/icon-chevron-down.svg");
+  }
+
+  .gh-icon-chevron-left {
+    background-image: url("/Content/img/icons/iconography/icon-chevron-left.svg");
+  }
+
+  .gh-icon-chevron-right {
+    background-image: url("/Content/img/icons/iconography/icon-chevron-right.svg");
+  }
+
+  .gh-icon-chevron-right-small {
+    background-image: url("/Content/img/icons/iconography/icon-chevron-right-small.svg");
+  }
+
+  .gh-icon-chevrons-left {
+    background-image: url("/Content/img/icons/iconography/icon-chevrons-left.svg");
+  }
+
+  .gh-icon-chevrons-right {
+    background-image: url("/Content/img/icons/iconography/icon-chevron-double-right-small.svg");
+  }
+
+  .gh-icon-close {
+    background-image: url("/Content/img/icons/iconography/icon-close.svg");
+  }
+
+  .gh-icon-close-circle {
+    background-image: url("/Content/img/icons/iconography/icon-close-circle.svg");
+  }
+
+  .gh-icon-delete {
+    background-image: url("/Content/img/icons/iconography/icon-delete.svg");
+  }
+
+  .gh-icon-download {
+    background-image: url("/Content/img/icons/iconography/icon-download.svg");
+  }
+
+  .gh-icon-filter {
+    background-image: url("/Content/img/icons/iconography/icon-filter.svg");
+  }
+
+  .gh-icon-heart {
+    background-image: url("/Content/img/icons/iconography/icon-heart.svg");
+  }
+
+  .gh-icon-menu {
+    background-image: url("/Content/img/icons/iconography/icon-menu.svg");
+  }
+
+  .gh-icon-minus {
+    background-image: url("/Content/img/icons/iconography/icon-minus.svg");
+  }
+
+  .gh-icon-more-horizontal {
+    background-image: url("/Content/img/icons/iconography/icon-more-horizontal.svg");
+  }
+
+  .gh-icon-more-vertical {
+    background-image: url("/Content/img/icons/iconography/icon-more-vertical.svg");
+  }
+
+  .gh-icon-plus {
+    background-image: url("/Content/img/icons/iconography/icon-plus.svg");
+  }
+
+  .gh-icon-refresh {
+    background-image: url("/Content/img/icons/iconography/icon-refresh.svg");
+  }
+
+  .gh-icon-search {
+    background-image: url("/Content/img/icons/iconography/icon-search.svg");
+  }
+
+  .gh-icon-settings {
+    background-image: url("/Content/img/icons/iconography/icon-settings.svg");
+  }
+
+  .gh-icon-sort {
+    background-image: url("/Content/img/icons/iconography/icon-sort.svg");
+  }
+
+  .gh-icon-star {
+    background-image: url("/Content/img/icons/iconography/icon-star.svg");
+  }
+
+  .gh-icon-toggle-off {
+    background-image: url("/Content/img/icons/iconography/icon-toggle-off.svg");
+  }
+
+  .gh-icon-toggle-on {
+    background-image: url("/Content/img/icons/iconography/icon-toggle-on.svg");
+  }
+
+  .gh-icon-user-circle {
+    background-image: url("/Content/img/icons/iconography/icon-user-circle.svg");
+  }
+
+  .gh-icon-user-settings {
+    background-image: url("/Content/img/icons/iconography/icon-user-settings.svg");
+  }
+
+  /* ==========================================================================
+      Checkbox Field Input
+      --------------------------------------------------------------------------
+      Custom checkbox visuals scoped primarily to `.gh-form` to avoid leaking
+      into third-party components.
+      - 20px square, 4px radius.
+      - Uses pseudo-element `::before` to render the checked state.
+      - Disabled variants reuse the same structure with muted colors.
+      ========================================================================== */
+  /* Scope styles to gh-form class only */
+  /* Enabled (default state) */
+  .checkbox-field-input,
+  .gh-form input[type="checkbox"],
+  [data-sf-role="form-container"] input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgb(var(--color-medium-gray));
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Selected state */
+  .checkbox-field-input:checked::before,
+  .gh-form input[type="checkbox"]:checked::before,
+  [data-sf-role="form-container"] input[type="checkbox"]:checked::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(var(--color-medium-gray));
+    border-radius: 3px;
+  }
+
+  /* Disabled state */
+  .checkbox-field-input:disabled,
+  .gh-form input[type="checkbox"]:disabled,
+  [data-sf-role="form-container"] input[type="checkbox"]:disabled {
+    border: 1px solid rgb(var(--color-medium-gray));
+    background-color: rgb(var(--color-light-gray));
+  }
+
+  /* Disabled Selected state */
+  .checkbox-field-input:disabled:checked,
+  .gh-form input[type="checkbox"]:disabled:checked,
+  [data-sf-role="form-container"] input[type="checkbox"]:disabled:checked {
+    border: 1px solid rgb(var(--color-medium-gray));
+  }
+
+  .checkbox-field-input:disabled:checked::before,
+  .gh-form input[type="checkbox"]:disabled:checked::before,
+  [data-sf-role="form-container"] input[type="checkbox"]:disabled:checked::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(var(--color-medium-gray));
+    border-radius: 3px;
+  }
+
+  /* ==========================================================================
+      Radio Field Input
+      --------------------------------------------------------------------------
+      Custom radio visuals, mirroring the checkbox API but with circular shape.
+      - 20px outer circle, 10px inner dot for checked state.
+      - Disabled variants maintain structure with softer colors.
+      ========================================================================== */
+  /* Scope styles to gh-form class only */
+  /* Enabled (default state) */
+  .radio-field-input,
+  .gh-form input[type="radio"],
+  [data-sf-role="form-container"] input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgb(var(--color-medium-gray));
+    border-radius: 50%;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Selected state - Inner circle */
+  .radio-field-input:checked::before,
+  .gh-form input[type="radio"]:checked::before,
+  [data-sf-role="form-container"] input[type="radio"]:checked::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background-color: rgb(var(--color-medium-gray));
+    border-radius: 50%;
+  }
+
+  /* Disabled state */
+  .radio-field-input:disabled,
+  .gh-form input[type="radio"]:disabled,
+  [data-sf-role="form-container"] input[type="radio"]:disabled {
+    border: 1px solid rgb(var(--color-medium-gray));
+    background-color: rgb(var(--color-light-gray));
+  }
+
+  /* Disabled Selected state - Inner circle */
+  .radio-field-input:disabled:checked,
+  .gh-form input[type="radio"]:disabled:checked,
+  [data-sf-role="form-container"] input[type="radio"]:disabled:checked {
+    border: 1px solid rgb(var(--color-medium-gray));
+    background-color: rgb(var(--color-light-gray));
+  }
+
+  .radio-field-input:disabled:checked::before,
+  .gh-form input[type="radio"]:disabled:checked::before,
+  [data-sf-role="form-container"] input[type="radio"]:disabled:checked::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background-color: rgb(var(--color-medium-gray));
+    border-radius: 50%;
+  }
+  .sf-Checkboxes label,
+  .sf-RadioButtons label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  /* ==========================================================================
+      Text Field Input
+      --------------------------------------------------------------------------
+      Base text inputs, selects, and textareas scoped to `.gh-form`.
+      - 42px height for single-line fields.
+      - 16px font-size with slight letter-spacing for readability.
+      - Focus state darkens border while preserving background.
+      Readonly/disabled states use neutral backgrounds to signal non-editable
+      fields without sacrificing legibility.
+      ========================================================================== */
+  /* Scope styles to gh-form class only */
+  /* Default state */
+  .text-field-input,
+  .gh-form input[type="text"],
+  .gh-form input[type="email"],
+  .gh-form input[type="password"],
+  .gh-form input[type="number"],
+  .gh-form input[type="tel"],
+  .gh-form input[type="url"],
+  .gh-form input[type="date"],
+  .gh-form input[type="datetime-local"],
+  .gh-form input[type="month"],
+  .gh-form input[type="time"],
+  .gh-form input[type="week"],
+  .gh-form input[type="search"],
+  .gh-form select,
+  .gh-form textarea,
+  [data-sf-role="form-container"] input[type="text"],
+  [data-sf-role="form-container"] input[type="email"],
+  [data-sf-role="form-container"] input[type="password"],
+  [data-sf-role="form-container"] input[type="number"],
+  [data-sf-role="form-container"] input[type="tel"],
+  [data-sf-role="form-container"] input[type="url"],
+  [data-sf-role="form-container"] input[type="date"],
+  [data-sf-role="form-container"] input[type="datetime-local"],
+  [data-sf-role="form-container"] input[type="month"],
+  [data-sf-role="form-container"] input[type="time"],
+  [data-sf-role="form-container"] input[type="week"],
+  [data-sf-role="form-container"] input[type="search"],
+  [data-sf-role="form-container"] select,
+  [data-sf-role="form-container"] textarea {
+    height: 42px;
+    padding: 8px;
+    border: 1px solid rgb(var(--color-medium-gray));
+    border-radius: 4px;
+    background-color: rgb(var(--color-white));
+    color: rgb(var(--color-near-black));
+    font-family: var(--font-family-book);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    line-height: 19px;
+    box-sizing: border-box;
+  }
+
+  /* Textarea specific - allow height to be flexible */
+  .gh-form textarea,
+  [data-sf-role="form-container"] textarea {
+    min-height: 126px;
+    height: auto;
+    resize: vertical;
+  }
+
+  /* Focused state */
+  .text-field-input:focus,
+  .gh-form input[type="text"]:focus,
+  .gh-form input[type="email"]:focus,
+  .gh-form input[type="password"]:focus,
+  .gh-form input[type="number"]:focus,
+  .gh-form input[type="tel"]:focus,
+  .gh-form input[type="url"]:focus,
+  .gh-form input[type="date"]:focus,
+  .gh-form input[type="datetime-local"]:focus,
+  .gh-form input[type="month"]:focus,
+  .gh-form input[type="time"]:focus,
+  .gh-form input[type="week"]:focus,
+  .gh-form input[type="search"]:focus,
+  .gh-form select:focus,
+  .gh-form textarea:focus,
+  [data-sf-role="form-container"] input[type="text"]:focus,
+  [data-sf-role="form-container"] input[type="email"]:focus,
+  [data-sf-role="form-container"] input[type="password"]:focus,
+  [data-sf-role="form-container"] input[type="number"]:focus,
+  [data-sf-role="form-container"] input[type="tel"]:focus,
+  [data-sf-role="form-container"] input[type="url"]:focus,
+  [data-sf-role="form-container"] input[type="date"]:focus,
+  [data-sf-role="form-container"] input[type="datetime-local"]:focus,
+  [data-sf-role="form-container"] input[type="month"]:focus,
+  [data-sf-role="form-container"] input[type="time"]:focus,
+  [data-sf-role="form-container"] input[type="week"]:focus,
+  [data-sf-role="form-container"] input[type="search"]:focus,
+  [data-sf-role="form-container"] select:focus,
+  [data-sf-role="form-container"] textarea:focus {
+    border: 1px solid rgb(var(--color-near-black));
+    border-radius: 4px;
+    background-color: rgb(var(--color-white));
+  }
+
+  /* Textarea focused - maintain auto height */
+  .gh-form textarea:focus,
+  [data-sf-role="form-container"] textarea:focus {
+    height: auto;
+    min-height: 42px;
+  }
+
+  /* Disabled state */
+  .text-field-input:disabled,
+  .gh-form input[type="text"]:disabled,
+  .gh-form input[type="email"]:disabled,
+  .gh-form input[type="password"]:disabled,
+  .gh-form input[type="number"]:disabled,
+  .gh-form input[type="tel"]:disabled,
+  .gh-form input[type="url"]:disabled,
+  .gh-form input[type="date"]:disabled,
+  .gh-form input[type="datetime-local"]:disabled,
+  .gh-form input[type="month"]:disabled,
+  .gh-form input[type="time"]:disabled,
+  .gh-form input[type="week"]:disabled,
+  .gh-form input[type="search"]:disabled,
+  .gh-form select:disabled,
+  .gh-form textarea:disabled,
+  [data-sf-role="form-container"] input[type="text"]:disabled,
+  [data-sf-role="form-container"] input[type="email"]:disabled,
+  [data-sf-role="form-container"] input[type="password"]:disabled,
+  [data-sf-role="form-container"] input[type="number"]:disabled,
+  [data-sf-role="form-container"] input[type="tel"]:disabled,
+  [data-sf-role="form-container"] input[type="url"]:disabled,
+  [data-sf-role="form-container"] input[type="date"]:disabled,
+  [data-sf-role="form-container"] input[type="datetime-local"]:disabled,
+  [data-sf-role="form-container"] input[type="month"]:disabled,
+  [data-sf-role="form-container"] input[type="time"]:disabled,
+  [data-sf-role="form-container"] input[type="week"]:disabled,
+  [data-sf-role="form-container"] input[type="search"]:disabled,
+  [data-sf-role="form-container"] select:disabled,
+  [data-sf-role="form-container"] textarea:disabled {
+    height: 42px;
+    border: 1px solid rgb(var(--color-medium-gray));
+    border-radius: 4px;
+    background-color: rgb(var(--color-white));
+    cursor: not-allowed;
+  }
+
+  /* Textarea disabled - maintain auto height */
+  .gh-form textarea:disabled,
+  [data-sf-role="form-container"] textarea:disabled {
+    height: auto;
+    min-height: 42px;
+  }
+
+  /* Readonly state */
+  .text-field-input[readonly],
+  .gh-form input[type="text"][readonly],
+  .gh-form input[type="email"][readonly],
+  .gh-form input[type="password"][readonly],
+  .gh-form input[type="number"][readonly],
+  .gh-form input[type="tel"][readonly],
+  .gh-form input[type="url"][readonly],
+  .gh-form input[type="date"][readonly],
+  .gh-form input[type="datetime-local"][readonly],
+  .gh-form input[type="month"][readonly],
+  .gh-form input[type="time"][readonly],
+  .gh-form input[type="week"][readonly],
+  .gh-form input[type="search"][readonly],
+  .gh-form select[readonly],
+  .gh-form textarea[readonly],
+  [data-sf-role="form-container"] input[type="text"][readonly],
+  [data-sf-role="form-container"] input[type="email"][readonly],
+  [data-sf-role="form-container"] input[type="password"][readonly],
+  [data-sf-role="form-container"] input[type="number"][readonly],
+  [data-sf-role="form-container"] input[type="tel"][readonly],
+  [data-sf-role="form-container"] input[type="url"][readonly],
+  [data-sf-role="form-container"] input[type="date"][readonly],
+  [data-sf-role="form-container"] input[type="datetime-local"][readonly],
+  [data-sf-role="form-container"] input[type="month"][readonly],
+  [data-sf-role="form-container"] input[type="time"][readonly],
+  [data-sf-role="form-container"] input[type="week"][readonly],
+  [data-sf-role="form-container"] input[type="search"][readonly],
+  [data-sf-role="form-container"] select[readonly],
+  [data-sf-role="form-container"] textarea[readonly] {
+    height: 42px;
+    border-radius: 4px;
+    background-color: rgb(var(--color-light-gray));
+    border: none;
+    color: rgb(var(--color-near-black));
+  }
+
+  /* Textarea readonly - maintain auto height */
+  .gh-form textarea[readonly],
+  [data-sf-role="form-container"] textarea[readonly] {
+    height: auto;
+    min-height: 126px;
+  }
+
+  /* ==========================================================================
+      File Input Field
+      --------------------------------------------------------------------------
+      File input styling with btn-secondary-small appearance for the upload button.
+      - Applies btn-secondary-small styles to the webkit file upload button.
+      - Maintains consistent form field appearance.
+      ========================================================================== */
+  /* File input container */
+  .gh-form input[type="file"],
+  [data-sf-role="form-container"] input[type="file"] {
+    height: 34px;
+    padding: 0;
+    border: 1px solid rgb(var(--color-medium-gray));
+    border-radius: 8px;
+    background-color: rgb(var(--color-white));
+    color: rgb(var(--color-near-black));
+    font-family: var(--font-family-book);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    line-height: 19px;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+
+  /* Webkit file upload button - styled as btn-secondary-small */
+  .gh-form input[type="file"]::-webkit-file-upload-button,
+  [data-sf-role="form-container"] input[type="file"]::-webkit-file-upload-button {
+    height: 32px;
+    padding: 7px 20px;
+    margin-right: 12px;
+    border: 0;
+    border-radius: 6px;
+    background-color: rgba(var(--color-secondary-blue), 1);
+    color: rgba(var(--color-white), 1);
+    font-family: var(--font-family-bold);
+    font-size: 13px;
+    font-weight: 700;
+    font-style: normal;
+    text-transform: uppercase;
+    text-align: center;
+    letter-spacing: 0.56px;
+    cursor: pointer;
+    user-select: none;
+    transition: var(--transition-base);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .gh-form input[type="file"]::-webkit-file-upload-button:hover,
+  [data-sf-role="form-container"] input[type="file"]::-webkit-file-upload-button:hover {
+    background-color: rgba(var(--color-dark-blue), 1);
+    color: rgba(var(--color-white), 1);
+  }
+
+  .gh-form input[type="file"]:disabled::-webkit-file-upload-button,
+  [data-sf-role="form-container"] input[type="file"]:disabled::-webkit-file-upload-button,
+  .gh-form input[type="file"][disabled]::-webkit-file-upload-button,
+  [data-sf-role="form-container"] input[type="file"][disabled]::-webkit-file-upload-button {
+    background-color: rgba(var(--color-tag-gray), 1);
+    color: rgba(var(--color-white), 1);
+    cursor: not-allowed;
+    opacity: 1;
+  }
+
+  /* File input focus state */
+  .gh-form input[type="file"]:focus,
+  [data-sf-role="form-container"] input[type="file"]:focus {
+    border: 1px solid rgb(var(--color-near-black));
+    border-radius: 4px;
+    background-color: rgb(var(--color-white));
+  }
+
+  /* File input disabled state */
+  .gh-form input[type="file"]:disabled,
+  [data-sf-role="form-container"] input[type="file"]:disabled,
+  .gh-form input[type="file"][disabled],
+  [data-sf-role="form-container"] input[type="file"][disabled] {
+    border: 1px solid rgb(var(--color-medium-gray));
+    border-radius: 4px;
+    background-color: rgb(var(--color-white));
+    cursor: not-allowed;
+  }
+
+  /* ==========================================================================
+      Error Message
+      --------------------------------------------------------------------------
+      Inline validation message styling, tuned for clarity and readability
+      below form fields (`[data-sf-role="error-message"]`).
+      ========================================================================== */
+  [data-sf-role="error-message"] {
+    display: block !important;
+    width: auto;
+    min-height: 16px;
+    color: rgb(235, 6, 0);
+    font-family: var(--font-family-book);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    line-height: 16px;
+    margin-top: 8px;
+  }
+
+  /* ==========================================================================
+      Field Wrapper
+      --------------------------------------------------------------------------
+      `.sf-fieldWrp` wraps individual fields + labels within `.gh-form`.
+      Provides consistent vertical rhythm and width handling for inputs.
+      ========================================================================== */
+  /* Scope styles to gh-form class only */
+  .gh-form .sf-fieldWrp,
+  [data-sf-role="form-container"] .sf-fieldWrp {
+    margin-bottom: 20px;
+    font-family: var(--font-family-book);
+    font-size: 14px;
+    font-weight: 400;
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    position: relative;
+  }
+
+  /* ==========================================================================
+      Field Label
+      --------------------------------------------------------------------------
+      Label treatment for all `.gh-form` fields:
+      - Medium weight `HelveticaNeue` for emphasis.
+      - Fixed minimum width to avoid jitter between labels.
+      ========================================================================== */
+  .gh-form .sf-fieldWrp label,
+  [data-sf-role="form-container"] .sf-fieldWrp label {
+    width: auto;
+    min-width: 80px;
+    height: 17px;
+    color: rgb(var(--color-near-black));
+    font-family: var(--font-family-medium);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    line-height: 17px;
+    margin-bottom: 8px;
+  }
+  .gh-form .sf-fieldWrp p,
+  [data-sf-role="form-container"] .sf-fieldWrp p {
+    font-size: 14px;
+  }
+
+  /* ==========================================================================
+      Text Field Label Right Layout
+      --------------------------------------------------------------------------
+      Layout for text fields with labels positioned on the right side.
+      Uses flexbox for proper alignment and spacing.
+      ========================================================================== */
+  [data-sf-role="text-field-container"] .text-field-label-right-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  [data-sf-role="text-field-container"] .text-field-label-right-wrapper .text-field-input-wrapper {
+    flex: 1;
+  }
+
+  /* ==========================================================================
+      Field Div
+      --------------------------------------------------------------------------
+      Specialized layout for captcha field container to keep audio + image
+      controls grouped and aligned.
+      ========================================================================== */
+  [data-sf-role="field-captcha-container"] div {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+  }
+
+  /* ==========================================================================
+      File Field Container
+      --------------------------------------------------------------------------
+      Spacing for file field container to provide consistent bottom padding.
+      ========================================================================== */
+  [data-sf-role="file-field-container"] {
+    padding-bottom: 24px;
+  }
+
+  /* ==========================================================================
+      Grid System (Bootstrap-inspired)
+      --------------------------------------------------------------------------
+      - `.row` / `.sf_cols.row` act as flex row containers with negative gutters.
+      - `.col-{breakpoint}-{n}` provide 12-column responsive sizing.
+      - Custom 2-column helpers (`.sf_2cols_*`) create fixed/relative width
+        sidebar + content layouts (e.g., 288px sidebar with flexible content).
+      This mirrors familiar grid systems while remaining compatible with the
+      rest of the design tokens defined above.
+      ========================================================================== */
+  /* Row Container */
+  .sf_cols.row,
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-left: -15px;
+    margin-right: -15px;
+  }
+
+  /* Column Base */
+  .sf_colsIn {
+    position: relative;
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    box-sizing: border-box;
+  }
+
+  .w-full {
+    width: 100%;
+  }
+
+  /* Custom 2-Column Grid Classes */
+  /* Based on 4-unit grid system */
+  .sf_2cols_1_25 {
+    flex: 0 0 288px;
+    max-width: 288px;
+  }
+
+  .sf_2cols_2_75 {
+    flex: 0 0 calc(100% - 288px);
+    max-width: calc(100% - 288px);
+  }
+
+  .sf_2cols_2in_75 {
+    flex: 0 0 calc(100% - 288px);
+    max-width: calc(100% - 288px);
+  }
+
+  /* Additional 2-column variations */
+  .sf_2cols_1 {
+    flex: 0 0 288px;
+    max-width: 288px;
+  }
+
+  .sf_2cols_3 {
+    flex: 0 0 calc(100% - 288px);
+    max-width: calc(100% - 288px);
+  }
+
+  .sf_2cols_1_5 {
+    flex: 0 0 calc(50% - 144px);
+    max-width: calc(50% - 144px);
+  }
+
+  .sf_2cols_2_5 {
+    flex: 0 0 calc(50% - 144px);
+    max-width: calc(50% - 144px);
+  }
+
+  /* Bootstrap-style Responsive Column Classes */
+  /* Extra Small (xs) - default mobile */
+  .col-xs-1 {
+    flex: 0 0 8.333333%;
+    max-width: 8.333333%;
+  }
+  .col-xs-2 {
+    flex: 0 0 16.666667%;
+    max-width: 16.666667%;
+  }
+  .col-xs-3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
+  .col-xs-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
+  .col-xs-5 {
+    flex: 0 0 41.666667%;
+    max-width: 41.666667%;
+  }
+  .col-xs-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  .col-xs-7 {
+    flex: 0 0 58.333333%;
+    max-width: 58.333333%;
+  }
+  .col-xs-8 {
+    flex: 0 0 66.666667%;
+    max-width: 66.666667%;
+  }
+  .col-xs-9 {
+    flex: 0 0 75%;
+    max-width: 75%;
+  }
+  .col-xs-10 {
+    flex: 0 0 83.333333%;
+    max-width: 83.333333%;
+  }
+  .col-xs-11 {
+    flex: 0 0 91.666667%;
+    max-width: 91.666667%;
+  }
+  .col-xs-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .two-col-row {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 32px;
+  }
+  .gh-3-column {
+    width: 288px;
+    flex-shrink: 0;
+  }
+  .gh-9-column {
+    min-width: 0px;
+    flex: 1 1 0%;
+  }
+  .grid-d3-t2-m1-cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    justify-content: flex-start;
+    gap: 32px;
+  }
+  .grid-d3-t2-m1-cols > * {
+    max-width: 394px;
+    width: 100%;
+    flex: 0 0 auto;
+  }
+  .grid-d2-t1-m1-cols {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+  .grid-d2-t1-m1-cols > * {
+    max-width: 608px;
+    width: 100%;
+    flex: 0 0 auto;
+  }
+  .grid-d4-t2-m1-cols {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    justify-content: flex-start;
+    gap: 32px;
+  }
+  .grid-d4-t2-m1-cols > * {
+    max-width: 288px;
+    width: 100%;
+    flex: 0 0 auto;
+  }
+  .grid-2-3-rows-container {
+    width: 100%;
+    background-color: #f8f8f8;
+    padding-top: 96px;
+    padding-bottom: 96px;
+  }
+  .grid-row-2-cols {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+    max-width: 1024px;
+    margin: 0 auto;
+  }
+  .grid-row-3-cols {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    max-width: 1024px;
+    margin: 0 auto;
+  }
+  .grid-6-6_6-6-container {
+    width: 100%;
+    background-color: rgba(244, 244, 244, 1);
+    padding-top: 64px;
+    padding-bottom: 64px;
+  }
+  .grid-6-6_6-6-content {
+    max-width: 1248px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .grid-12_12_12_6-6-container {
+    padding: 64px 0;
+  }
+  .grid-12_12_12_6-6-content {
+    max-width: 1248px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .description-column {
+    padding-bottom: 40px;
+  }
+
+  .grid-12_12_4-4-4-container {
+    width: 100%;
+    background-color: rgba(244, 244, 244, 1);
+    padding-top: 80px;
+    padding-bottom: 80px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .grid-12_12_4-4-4-content {
+    max-width: 1248px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  /* Grid system media queries moved to Media Queries section at end of file */
+
+  /* ==========================================================================
+      3-9 Column Layout - Account Sidebar
+      --------------------------------------------------------------------------
+      Layout pattern for account pages:
+      - `.account-sidebar`  : fixed-width navigation column.
+      - `.account-main-content`: flexible main content area.
+      This composes with the grid system above to create a 3-9 style layout.
+      ========================================================================== */
+  .account-sidebar {
+    margin-top: 16px;
+  }
+  .account-sidebar h3 {
+    color: rgb(var(--color-near-black));
+    font-family: var(--font-family-semi-bold);
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 0;
+  }
+  .account-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .account-sidebar li {
+    border-bottom: 1px solid rgb(var(--color-light-gray));
+  }
+  .account-sidebar li:last-child {
+    border-bottom: none;
+  }
+  .account-sidebar a {
+    color: rgb(var(--color-near-black));
+    font-family: var(--font-family-medium);
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 12px 0;
+    display: block;
+    transition: var(--transition);
+  }
+  .account-sidebar a:hover,
+  .account-sidebar a:focus {
+    color: rgb(var(--color-dark-blue));
+  }
+
+  .account-main-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ==========================================================================
+    Three Column Layout (3-6-3)
+    --------------------------------------------------------------------------
+    Left Sidebar (288px) + Main Content (flex) + Right Sidebar (288px).
+    - `.three-column-layout-container`: outer flex shell with gap.
+    - `.three-col-left-sidebar` / `.three-col-right-sidebar`: fixed-width rails.
+    - `.three-col-main-content`: flexible middle column.
+    At <= 1200px the layout collapses into a vertical stack to preserve
+    readability on smaller viewports.
+    ========================================================================== */
+  .three-column-layout-container {
+    display: flex;
+    width: 100%;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .three-col-left-sidebar {
+    width: 288px;
+    flex-shrink: 0;
+  }
+
+  .three-col-main-content {
+    flex: 1 1 0%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .three-col-header {
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .three-col-content-row {
+    display: flex;
+    width: 100%;
+    gap: 32px;
+    flex-wrap: wrap;
+    margin-top: 0;
+  }
+
+  .three-col-content-main {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+
+  .three-col-right-sidebar {
+    width: 288px;
+    flex-shrink: 0;
+  }
+  .grid-6-6_6-6-content,
+  .grid-12_12_12_6-6-content,
+  .grid-12_12_4-4-4-content,
+  .breadcrumb,
+  .two-col-row,
+  .resource-wrapper {
+    max-width: var(--container-max-width);
+    width: 100%;
+    margin: 0 auto;
+  }
+  .iframe-video-embed {
+    height: 100%;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+  }
+  @media only screen and (min-device-width: 320px) and (max-device-width: 812px) and (orientation: landscape) {
+    .iframe-video-embed {
+      border: 0;
+      overflow: hidden;
+    }
+  }
+  /* ==========================================================================
+    Media Queries
+    --------------------------------------------------------------------------
+    Three breakpoint system:
+    1. Desktop: >=1025px (default/base styles, no media query needed)
+    2. Tablet: >=768px and <=1024px
+    3. Mobile: <=767px
+    ========================================================================== */
+
+  /* Desktop styles (>=1025px) - Base styles, no media query needed */
+
+  /* --------------------------------------------------------------------------
+    Desktop Responsive: >=1024px and <1296px
+    When viewport is between 1024px and container max-width (1248px),
+    apply horizontal padding to prevent content from touching edges
+    -------------------------------------------------------------------------- */
+  @media (min-width: 1024px) and (max-width: 1296px) {
+    main {
+      /* padding-left: var(--container-padding-desktop);
+      padding-right: var(--container-padding-desktop); */
+      padding: 0;
+      margin: 0;
+      margin-bottom: 40px !important;
+    }
+
+    /* Apply desktop padding to content containers with max-width: 1248px */
+    .grid-6-6_6-6-content,
+    .grid-12_12_12_6-6-content,
+    .grid-12_12_4-4-4-content,
+    .breadcrumb,
+    .two-col-row,
+    .resource-wrapper, 
+    #hawkbreadcrumb, .gh-communications-container {
+      padding-left: var(--container-padding-desktop);
+      padding-right: var(--container-padding-desktop);
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+    Tablet: >=768px and <1024px
+    -------------------------------------------------------------------------- */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    main {
+      /* padding-left: var(--container-padding-tablet);
+      padding-right: var(--container-padding-tablet); */
+      padding: 0;
+      margin: 0;
+      margin-bottom: 40px !important;
+    }
+
+    /* Apply tablet padding to content containers with max-width: 1248px */
+    .grid-6-6_6-6-content,
+    .grid-12_12_12_6-6-content,
+    .grid-12_12_4-4-4-content,
+    .breadcrumb,
+    .two-col-row,
+    .resource-wrapper {
+      padding-left: var(--container-padding-tablet);
+      padding-right: var(--container-padding-tablet);
+    }
+
+    .three-column-layout-container {
+      flex-direction: column;
+    }
+
+    .three-col-left-sidebar {
+      width: 100%;
+    }
+
+    .three-col-main-content {
+      width: 100%;
+    }
+
+    .three-col-content-row {
+      flex-direction: column;
+    }
+
+    .three-col-content-main {
+      width: 100%;
+    }
+
+    .three-col-right-sidebar {
+      width: 100%;
+    }
+
+    .grid-d3-t2-m1-cols {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+    }
+    .grid-d3-t2-m1-cols > * {
+      max-width: calc(50% - 15px);
+    }
+
+    .grid-d2-t1-m1-cols {
+      gap: 30px;
+      grid-template-columns: repeat(1, 1fr);
+    }
+    .grid-d2-t1-m1-cols > * {
+      max-width: 100%;
+    }
+
+    .grid-d4-t2-m1-cols {
+      gap: 30px;
+      grid-template-columns: repeat(1, 1fr);
+    }
+    .grid-d4-t2-m1-cols > * {
+      max-width: calc(50% - 15px);
+    }
+
+    .grid-row-2-cols {
+      grid-template-columns: repeat(1, 1fr);
+      gap: 20px;
+    }
+
+    .grid-row-3-cols {
+      grid-template-columns: repeat(1, 1fr);
+      gap: 20px;
+    }
+
+    .grid-2-3-rows-container {
+      padding-top: 48px;
+      padding-bottom: 48px;
+    }
+
+    .gh-3-column {
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .footer-info-contact {
+      display: flex;
+      flex-direction: row;
+      gap: 0.5rem;
+      width: fit-content;
+    }
+
+    .footer-contact-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-address {
+      flex: 1 1 0;
+      width: 100%;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    .footer-bottom-main {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 32px;
+      width: auto;
+      margin: 0 70px;
+    }
+
+    .footer-main {
+      max-width: 1248px;
+      margin: 0 70px;
+      padding: 40px 0 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      justify-content: space-between;
+    }
+
+    .footer-section {
+      background-color: rgb(var(--color-white));
+      padding: 0 20px;
+    }
+
+    .site-footer__logo {
+      height: 44px;
+    }
+
+    .footer-logo {
+      justify-content: center;
+      order: 1;
+    }
+
+    .footer-heading {
+      display: none;
+    }
+
+    .footer-accordion-panel[aria-hidden="false"] {
+      display: block;
+    }
+
+    .footer-accordion-panel {
+      display: none;
+      padding: 0 0 16px 0;
+      background: none;
+    }
+
+    .footer-accordion-btn {
+      display: block;
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      font-size: 17px;
+      font-weight: 600;
+      font-family: var(--font-family-semi-bold);
+      color: rgb(var(--color-near-black));
+      padding: 16px 0;
+      cursor: pointer;
+      position: relative;
+      border-radius: 0;
+    }
+
+    .footer-bottom {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 20px;
+      padding: 24px 8px 16px 8px;
+      margin-top: 0;
+    }
+
+    .footer-brand {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .footer-careers {
+      width: 100%;
+      text-align: center;
+    }
+
+    .footer-social {
+      gap: 10px;
+      margin-right: 0 !important;
+    }
+
+    .footer-info {
+      flex-direction: column;
+      gap: 0;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      order: 3;
+      width: 100%;
+      font-weight: 400;
+    }
+
+    .footer-social-container {
+      order: 2;
+      display: flex;
+      gap: 32px;
+    }
+
+    .footer-info-links {
+      display: flex;
+      flex-direction: row;
+      gap: 11px;
+      align-items: center;
+    }
+
+    .footer-copyright {
+      margin-top: 8px;
+      padding: 0;
+      text-align: center;
+    }
+
+    .footer-links {
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+    Mobile: <=767px
+    -------------------------------------------------------------------------- */
+  @media (max-width: 767px) {
+    main {
+      /* padding: 0 var(--container-padding-mobile) 24px var(--container-padding-mobile); */
+      padding: 0;
+      margin: 0;
+      margin-top: 78px !important;
+      padding-top: 0 !important;
+      margin-bottom: 40px !important;
+    }
+
+    /* Apply mobile padding to content containers with max-width: 1248px */
+    .grid-6-6_6-6-content,
+    .grid-12_12_12_6-6-content,
+    .grid-12_12_4-4-4-content,
+    .breadcrumb,
+    .two-col-row,
+    .resource-wrapper {
+      padding-left: var(--container-padding-mobile);
+      padding-right: var(--container-padding-mobile);
+    }
+
+    .page-title {
+      font-size: 24px;
+    }
+
+    .page-header p {
+      font-size: 15px;
+    }
+
+    .sf_2cols_1_25,
+    .sf_2cols_2_75,
+    .sf_2cols_2in_75,
+    .sf_2cols_1,
+    .sf_2cols_3,
+    .sf_2cols_1_5,
+    .sf_2cols_2_5 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+
+    .grid-d3-t2-m1-cols {
+      gap: 20px;
+      grid-template-columns: repeat(1, 1fr);
+    }
+    .grid-d3-t2-m1-cols > * {
+      max-width: 100%;
+    }
+
+    .grid-d2-t1-m1-cols {
+      gap: 20px;
+      grid-template-columns: repeat(1, 1fr);
+    }
+    .grid-d2-t1-m1-cols > * {
+      max-width: 100%;
+    }
+
+    .grid-d4-t2-m1-cols {
+      gap: 20px;
+      grid-template-columns: repeat(1, 1fr);
+    }
+    .grid-d4-t2-m1-cols > * {
+      max-width: 100%;
+    }
+
+    .grid-row-2-cols {
+      grid-template-columns: repeat(1, 1fr);
+      gap: 20px;
+    }
+
+    .grid-row-3-cols {
+      grid-template-columns: repeat(1, 1fr);
+      gap: 20px;
+    }
+
+    .grid-2-3-rows-container {
+      padding-top: 48px;
+      padding-bottom: 48px;
+    }
+
+    .gh-3-column {
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .three-column-layout-container {
+      flex-direction: column;
+    }
+
+    .three-col-left-sidebar {
+      width: 100%;
+    }
+
+    .three-col-main-content {
+      width: 100%;
+    }
+
+    .three-col-content-row {
+      flex-direction: column;
+    }
+
+    .three-col-content-main {
+      width: 100%;
+    }
+
+    .three-col-right-sidebar {
+      width: 100%;
+    }
+
+    .footer-bottom {
+      padding: 35px 20px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .footer-copyright {
+      padding: 3px 15px;
+      text-align: center;
+      max-width: 213px;
+      margin-top: 0;
+      font-size: 12px;
+    }
+
+    .footer-info a:after {
+      content: none;
+    }
+
+    .footer-info-contact a:nth-child(2):after {
+      content: "|";
+    }
+
+    .footer-accordion-panel[aria-hidden="false"] {
+      display: block;
+    }
+
+    .footer-accordion-panel {
+      display: none;
+      padding: 0 0 16px 0;
+      background: none;
+    }
+
+    .footer-link {
+      line-height: 18px;
+    }
+
+    .footer-section {
+      background-color: rgb(var(--color-white));
+      padding: 0 20px;
+    }
+
+    .footer-main {
+      max-width: 1248px;
+      margin: 0 auto;
+      padding: 34px 38px 12px 38px;
+      display: flex;
+      gap: 2px;
+      justify-content: space-between;
+      flex-direction: column;
+    }
+
+    .site-footer__logo {
+      max-height: 44px;
+    }
+
+    .footer-bottom-main {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .footer-logo {
+      order: 1;
+    }
+
+    .footer-social-container {
+      order: 2;
+      display: flex;
+      gap: 32px;
+      margin-top: 22px;
+      margin-left: 0;
+    }
+
+    .footer-info {
+      flex-direction: column;
+      display: flex;
+      order: 3;
+      gap: 32px;
+    }
+
+    .footer-info-links {
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+    }
+
+    .footer-info-contact {
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 183px;
+      flex-direction: row;
+      gap: 11px;
+    }
+
+    .footer-heading {
+      display: none;
+    }
+
+    .footer-accordion-btn {
+      display: block;
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: rgb(var(--color-near-black));
+      padding: 16px 0;
+      cursor: pointer;
+      position: relative;
+      border-radius: 0;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+    Accessibility Queries
+    -------------------------------------------------------------------------- */
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    :root {
+      --color-near-black: #000000;
+      --color-dark-gray: #333333;
+      --color-light-gray: #000000;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* --------------------------------------------------------------------------
+    Print Styles
+    -------------------------------------------------------------------------- */
+
+  @media print {
+    main {
+      max-width: none;
+      padding: 0;
+      margin: 0;
+      margin-bottom: 40px !important;
+    }
+
+    .page-title,
+    .page-header p {
+      color: rgb(var(--color-black));
+    }
+
+    .scroll-to-top,
+    .skip-link {
+      display: none;
+    }
+  }
+
+  .img-fullwidth {
+    width: 100%;
+    margin-bottom: 30px;
+  }
+
+  .width-70percent-img {
+    width: 70%;
+    margin-bottom: 30px;
+  }
+
+  /* ==========================================================================
+    Cookie Consent Banner - Floating Toast
+    --------------------------------------------------------------------------
+    Fixed position floating toast at the top of the page for GDPR cookie consent.
+    Positioned below the header as a centered, rounded notification.
+    Uses design system tokens for colors, typography, and spacing.
+    ========================================================================== */
+  .gdpr-container.cookiebanner {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    max-width: 90%;
+    min-width: 320px;
+    background-color: rgb(var(--color-white));
+    border: 1px solid rgb(var(--color-light-gray));
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(var(--color-black), 0.15);
+    z-index: 10000;
+    padding: 0;
+    transition: transform var(--transition-base), opacity var(--transition-base);
+  }
+
+  .gdpr-container.cookiebanner .container-fluid {
+    width: 100%;
+    padding: 0;
+  }
+
+  .gdpr-container.cookiebanner .cookie-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 20px;
+    gap: 16px;
+    position: relative;
+  }
+
+  .gdpr-container.cookiebanner .cookie-text {
+    font-family: var(--font-family-book);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-relaxed);
+    color: rgb(var(--color-near-black));
+    margin: 0;
+  }
+
+  .gdpr-container.cookiebanner .cookie-text a {
+    color: rgb(var(--color-dark-blue));
+    text-decoration: underline;
+    transition: color var(--transition-fast);
+  }
+
+  .gdpr-container.cookiebanner .cookie-text a:hover,
+  .gdpr-container.cookiebanner .cookie-text a:focus {
+    color: rgb(var(--color-sky-blue));
+    text-decoration: underline;
+  }
+
+  .gdpr-container.cookiebanner .cookie-text a:focus {
+    outline: 2px solid rgb(var(--color-dark-blue));
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .gdpr-container.cookiebanner .acceptcookies {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    background: none;
+    border: none;
+    color: rgb(var(--color-medium-gray));
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color var(--transition-fast),
+      color var(--transition-fast);
+    flex-shrink: 0;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .gdpr-container.cookiebanner .acceptcookies .fa,
+  .gdpr-container.cookiebanner .acceptcookies .fa-times {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .gdpr-container.cookiebanner .acceptcookies:hover,
+  .gdpr-container.cookiebanner .acceptcookies:focus {
+    background-color: rgb(var(--color-light-gray));
+    color: rgb(var(--color-near-black));
+  }
+
+  .gdpr-container.cookiebanner .acceptcookies:focus {
+    outline: 2px solid rgb(var(--color-dark-blue));
+    outline-offset: 2px;
+  }
+
+  /* --------------------------------------------------------------------------
+    Tablet: >=768px and <=1024px
+    -------------------------------------------------------------------------- */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .gdpr-container.cookiebanner {
+      top: 75px;
+      max-width: 85%;
+    }
+
+    .gdpr-container.cookiebanner .cookie-container {
+      padding: 14px 20px;
+    }
+
+    .gdpr-container.cookiebanner .cookie-text {
+      font-size: 15px;
+    }
+  }
+
+  /* ==========================================================================
+      Search Input Group
+      --------------------------------------------------------------------------
+      Input group with integrated search icon following design system:
+      - 2px border with design system colors
+      - Integrated icon that appears as part of the input
+      - Maintains all existing class names for JS compatibility
+      ========================================================================== */
+  .search-container.input-group {
+    display: flex;
+    align-items: stretch;
+    max-width: 160px;
+    border: 2px solid rgb(var(--color-medium-gray));
+    border-radius: 4px;
+    background-color: rgb(var(--color-white));
+    overflow: hidden;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  .search-container.input-group:focus-within {
+    border: 2px solid rgb(var(--color-near-black));
+  }
+
+  .search-container.input-group .site-search-input,
+  .search-container.input-group .txtSiteSearch {
+    flex: 1;
+    height: 32px;
+    padding: 4px 12px;
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+    color: rgb(var(--color-near-black));
+    font-family: var(--font-family-book);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    line-height: 19px;
+    box-sizing: border-box;
+    width: 156px;
+  }
+  /* Style the cancel/clear icon in search inputs */
+  .search-container.input-group .site-search-input::-webkit-search-cancel-button,
+  .search-container.input-group .txtSiteSearch::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    /* Add custom styling for the cancel icon if needed */
+  }
+
+  /* Adjust decoration container width if needed for spacing */
+  .search-container.input-group .site-search-input::-webkit-textfield-decoration-container,
+  .search-container.input-group .txtSiteSearch::-webkit-textfield-decoration-container {
+    width: 116px !important;
+  }
+  .search-container.input-group .site-search-input:focus,
+  .search-container.input-group .txtSiteSearch:focus {
+    border: none;
+    background-color: transparent;
+  }
+
+  .search-container.input-group .input-group-addon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    background-color: transparent;
+    border: none;
+    border-left: none;
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+    top: 8px;
+  }
+
+  .search-container.input-group .input-group-addon .fa-search,
+  .search-container.input-group .input-group-addon .btnSiteSearch {
+    color: rgb(var(--color-dark-gray));
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .search-container.input-group .input-group-addon:hover .fa-search,
+  .search-container.input-group .input-group-addon:hover .btnSiteSearch {
+    color: rgb(var(--color-near-black));
+  }
+
+  /* --------------------------------------------------------------------------
+    Mobile: <=767px
+    -------------------------------------------------------------------------- */
+  @media (max-width: 767px) {
+    .gdpr-container.cookiebanner {
+      top: 70px;
+      max-width: calc(100% - 32px);
+      min-width: auto;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .gdpr-container.cookiebanner .cookie-container {
+      flex-direction: row;
+      align-items: center;
+      padding: 12px 16px;
+      gap: 12px;
+    }
+
+    .gdpr-container.cookiebanner .cookie-text {
+      font-size: 13px;
+      line-height: 1.5;
+      padding-right: 32px;
+      flex: 1;
+    }
+
+    .gdpr-container.cookiebanner .acceptcookies {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+    }
+  }
