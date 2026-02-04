@@ -341,8 +341,8 @@
   
   .space-selection-modal-header-left {
     display: flex;
-    align-items: center;
-    gap: 15px;
+    align-items: flex-start;
+    gap: 0;
   }
   
   .space-selection-modal-back-btn {
@@ -355,12 +355,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: 6px;
   }
   
   .space-selection-modal-back-btn:hover {
     background-color: rgba(var(--color-white), 0.1);
   }
-  
+  .space-selection-modal-back-btn .material-symbols-outlined{
+    color: rgb(var(--color-white)) !important;
+    font-size: 44px;
+  }
   .space-selection-modal-title {
     display: flex;
     flex-direction: column;
